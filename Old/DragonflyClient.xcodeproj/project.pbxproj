@@ -46,14 +46,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		314588CB20CDC764008C2498 /* MQTTNetworking.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MQTTNetworking.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		314588CB20CDC764008C2498 /* DragonflyClient.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DragonflyClient.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		314588CE20CDC764008C2498 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		314588D020CDC764008C2498 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		314588D320CDC764008C2498 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		314588D520CDC765008C2498 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		314588D820CDC765008C2498 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		314588DA20CDC765008C2498 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		314588DF20CDC765008C2498 /* MQTTNetworkingTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MQTTNetworkingTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		314588DF20CDC765008C2498 /* DragonflyClientTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DragonflyClientTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		314588E320CDC765008C2498 /* MQTTNetworkingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MQTTNetworkingTests.swift; sourceTree = "<group>"; };
 		314588E520CDC765008C2498 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		314588EE20CDC791008C2498 /* MQTTNetworking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MQTTNetworking.swift; sourceTree = "<group>"; };
@@ -108,8 +108,8 @@
 		314588CC20CDC764008C2498 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				314588CB20CDC764008C2498 /* MQTTNetworking.app */,
-				314588DF20CDC765008C2498 /* MQTTNetworkingTests.xctest */,
+				314588CB20CDC764008C2498 /* DragonflyClient.app */,
+				314588DF20CDC765008C2498 /* DragonflyClientTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -175,9 +175,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		314588CA20CDC764008C2498 /* MQTTNetworking */ = {
+		314588CA20CDC764008C2498 /* DragonflyClient */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 314588E820CDC765008C2498 /* Build configuration list for PBXNativeTarget "MQTTNetworking" */;
+			buildConfigurationList = 314588E820CDC765008C2498 /* Build configuration list for PBXNativeTarget "DragonflyClient" */;
 			buildPhases = (
 				314588C720CDC764008C2498 /* Sources */,
 				314588C820CDC764008C2498 /* Frameworks */,
@@ -187,14 +187,14 @@
 			);
 			dependencies = (
 			);
-			name = MQTTNetworking;
+			name = DragonflyClient;
 			productName = MQTTNetworking;
-			productReference = 314588CB20CDC764008C2498 /* MQTTNetworking.app */;
+			productReference = 314588CB20CDC764008C2498 /* DragonflyClient.app */;
 			productType = "com.apple.product-type.application";
 		};
-		314588DE20CDC765008C2498 /* MQTTNetworkingTests */ = {
+		314588DE20CDC765008C2498 /* DragonflyClientTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 314588EB20CDC765008C2498 /* Build configuration list for PBXNativeTarget "MQTTNetworkingTests" */;
+			buildConfigurationList = 314588EB20CDC765008C2498 /* Build configuration list for PBXNativeTarget "DragonflyClientTests" */;
 			buildPhases = (
 				314588DB20CDC765008C2498 /* Sources */,
 				314588DC20CDC765008C2498 /* Frameworks */,
@@ -205,9 +205,9 @@
 			dependencies = (
 				314588E120CDC765008C2498 /* PBXTargetDependency */,
 			);
-			name = MQTTNetworkingTests;
+			name = DragonflyClientTests;
 			productName = MQTTNetworkingTests;
-			productReference = 314588DF20CDC765008C2498 /* MQTTNetworkingTests.xctest */;
+			productReference = 314588DF20CDC765008C2498 /* DragonflyClientTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -229,7 +229,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 314588C620CDC764008C2498 /* Build configuration list for PBXProject "MQTTNetworking" */;
+			buildConfigurationList = 314588C620CDC764008C2498 /* Build configuration list for PBXProject "DragonflyClient" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -242,8 +242,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				314588CA20CDC764008C2498 /* MQTTNetworking */,
-				314588DE20CDC765008C2498 /* MQTTNetworkingTests */,
+				314588CA20CDC764008C2498 /* DragonflyClient */,
+				314588DE20CDC765008C2498 /* DragonflyClientTests */,
 			);
 		};
 /* End PBXProject section */
@@ -311,7 +311,7 @@
 /* Begin PBXTargetDependency section */
 		314588E120CDC765008C2498 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 314588CA20CDC764008C2498 /* MQTTNetworking */;
+			target = 314588CA20CDC764008C2498 /* DragonflyClient */;
 			targetProxy = 314588E020CDC765008C2498 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -461,7 +461,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jonshier.MQTTNetworking;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jonshier.DragonflyClient;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -479,7 +479,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.jonshier.MQTTNetworking;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jonshier.DragonflyClient;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -503,7 +503,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MQTTNetworking.app/MQTTNetworking";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DragonflyClient.app/DragonflyClient";
 			};
 			name = Debug;
 		};
@@ -524,14 +524,14 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MQTTNetworking.app/MQTTNetworking";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DragonflyClient.app/DragonflyClient";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		314588C620CDC764008C2498 /* Build configuration list for PBXProject "MQTTNetworking" */ = {
+		314588C620CDC764008C2498 /* Build configuration list for PBXProject "DragonflyClient" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				314588E620CDC765008C2498 /* Debug */,
@@ -540,7 +540,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		314588E820CDC765008C2498 /* Build configuration list for PBXNativeTarget "MQTTNetworking" */ = {
+		314588E820CDC765008C2498 /* Build configuration list for PBXNativeTarget "DragonflyClient" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				314588E920CDC765008C2498 /* Debug */,
@@ -549,7 +549,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		314588EB20CDC765008C2498 /* Build configuration list for PBXNativeTarget "MQTTNetworkingTests" */ = {
+		314588EB20CDC765008C2498 /* Build configuration list for PBXNativeTarget "DragonflyClientTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				314588EC20CDC765008C2498 /* Debug */,
