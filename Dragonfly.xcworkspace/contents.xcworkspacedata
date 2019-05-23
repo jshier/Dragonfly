@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:DragonflyCore/DragonflyCore.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:DragonflyClient/DragonflyClient.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:DragonflyServer/DragonflyServer.xcodeproj">
+   </FileRef>
+</Workspace>
