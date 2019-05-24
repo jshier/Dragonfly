@@ -8,13 +8,19 @@
 
 import Foundation
 
-struct FixedHeader {
+public struct FixedHeader {
     enum PacketType: UInt8 {
         case connect = 0x01
         case connectionAcknowledgement = 0x02
         case publish = 0x03
+        case publishAcknowledgement = 0x04
+        case publishReceived = 0x05
+        case publishRelease = 0x06
+        case publishComplete = 0x07
         case subscribe = 0x08
         case subscribeAcknowledgement = 0x09
+        case unsubscribe = 0x0A
+        case unsubscribeAcknowledgement = 0x0B
         case ping = 0x0C
         case pingResponse = 0x0D
     }
@@ -45,18 +51,34 @@ struct FixedHeader {
         flags = byte & 0x0F
     }
     
-    var value: UInt8 { return UInt8(left: type.rawValue, right: flags) }
+    var value: UInt8 { return UInt8(upper: type.rawValue, lower: flags) }
     var data: Data { var byte = value; return Data(bytes: &byte, count: 1) }
 }
 
-extension UInt8 {
-    /// Takes the lowest 4 bits from `left` and `right` and combines them, `left` at the highest, `right` at the lowest.
-    init(left: UInt8, right: UInt8) {
-        self = (left << 4) | (right & 0x0F)
+public extension UInt8 {
+    /// Takes the lowest 4 bits from `upper` and `lower` and combines them, `upper` at the highest, `lower` at the lowest.
+    init(upper: UInt8, lower: UInt8) {
+        self = (upper << 4) | (lower & 0x0F)
+    }
+    
+    var halves: (upper: UInt8, lower: UInt8) {
+        return (upper: upperBits, lower: lowerBits)
+    }
+    
+    var upperBits: UInt8 {
+        return self >> 4
+    }
+    
+    var lowerBits: UInt8 {
+        return self & 0x0F
+    }
+    
+    var hexString: String {
+        return "0x\(String(format: "%02X", self))"
     }
 }
 
-extension UInt16 {
+public extension UInt16 {
     init(_ bytes: (first: UInt8, second: UInt8)) {
         self = (UInt16(bytes.first) << 8) | UInt16(bytes.second)
     }
@@ -87,7 +109,7 @@ extension Data: Buffer {
     }
 }
 
-struct MQTTData {
+struct Payload {
     var data: Data
     
     init(capacity: Int = 1_024) {
@@ -148,7 +170,7 @@ extension Data {
 }
 
 struct VariableHeader {
-    var data = MQTTData()
+    var data = Payload()
 }
 
 struct Header {
@@ -158,7 +180,7 @@ struct Header {
 struct Packet {
     let fixedHeader: FixedHeader
     let variableHeader: VariableHeader
-    let payload: MQTTData
+    let payload: Payload
     
     var encoded: Data {
         var packet = Data(capacity: 1_024)
@@ -176,12 +198,12 @@ struct Packet {
 protocol PacketConvertible {
     var fixedHeader: FixedHeader { get }
     var variableHeader: VariableHeader { get }
-    var payload: MQTTData { get }
+    var payload: Payload { get }
 }
 
 extension PacketConvertible {
     var variableHeader: VariableHeader { return VariableHeader() }
-    var payload: MQTTData { return MQTTData() }
+    var payload: Payload { return Payload() }
     
     var packet: Packet {
         return Packet(fixedHeader: fixedHeader, variableHeader: variableHeader, payload: payload)
@@ -189,8 +211,12 @@ extension PacketConvertible {
 }
 
 struct ConnectPacket {
+    enum ProtocolVersion: UInt8 {
+        case v311 = 0x04
+        case v50 = 0x05
+    }
     let protocolName = "MQTT"
-    let protocolLevel: UInt8 = 0x04
+    let protocolVersion: ProtocolVersion = .v311
     
     let cleanSession: Bool
     let keepAlive: UInt16
@@ -213,18 +239,18 @@ extension ConnectPacket: PacketConvertible {
     var fixedHeader: FixedHeader { return .connect }
     
     var variableHeader: VariableHeader {
-        var data = MQTTData()
+        var data = Payload()
         
         data.append(protocolName)
-        data.append(protocolLevel)
+        data.append(protocolVersion.rawValue)
         data.append(encodedFlags)
         data.append(keepAlive)
         
         return VariableHeader(data: data)
     }
     
-    var payload: MQTTData {
-        var data = MQTTData()
+    var payload: Payload {
+        var data = Payload()
         
         data.append(clientID)
         
@@ -280,14 +306,14 @@ struct Subscribe: PacketConvertible {
     let fixedHeader: FixedHeader = .subscribe
     
     var variableHeader: VariableHeader {
-        var data = MQTTData()
+        var data = Payload()
         data.append(packetID)
         
         return VariableHeader(data: data)
     }
     
-    var payload: MQTTData {
-        var data = MQTTData()
+    var payload: Payload {
+        var data = Payload()
         
         for (key, value) in topics {
             data.append(key)

@@ -9,6 +9,15 @@
           "revision": "ed50f8a41ece8db20afa8d1188fc0960f95263df",
           "version": "2.2.0"
         }
+      },
+      {
+        "package": "swift-nio-extras",
+        "repositoryURL": "https://github.com/apple/swift-nio-extras.git",
+        "state": {
+          "branch": null,
+          "revision": "96e8335180ca61c7187efe47058a1c99eadaf265",
+          "version": "1.1.0"
+        }
       }
     ]
   },

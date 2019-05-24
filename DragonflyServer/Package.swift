@@ -7,12 +7,13 @@ let package = Package(
     name: "DragonflyServer",
     dependencies: [
          .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
+         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.0.0"),
          .package(path: "../DragonflyCore")
     ],
     targets: [
         .target(
             name: "DragonflyServer",
-            dependencies: ["NIO", "DragonflyCore"]),
+            dependencies: ["NIO", "NIOExtras", "DragonflyCore"]),
         .testTarget(
             name: "DragonflyServerTests",
             dependencies: ["DragonflyServer"]),
