@@ -5,10 +5,10 @@
    objects = {
       "DragonflyCore::DragonflyCore" = {
          isa = "PBXNativeTarget";
-         buildConfigurationList = "OBJ_20";
+         buildConfigurationList = "OBJ_19";
          buildPhases = (
-            "OBJ_23",
-            "OBJ_26"
+            "OBJ_22",
+            "OBJ_24"
          );
          dependencies = (
          );
@@ -24,24 +24,24 @@
       };
       "DragonflyCore::DragonflyCorePackageTests::ProductTarget" = {
          isa = "PBXAggregateTarget";
-         buildConfigurationList = "OBJ_34";
+         buildConfigurationList = "OBJ_32";
          buildPhases = (
          );
          dependencies = (
-            "OBJ_37"
+            "OBJ_35"
          );
          name = "DragonflyCorePackageTests";
          productName = "DragonflyCorePackageTests";
       };
       "DragonflyCore::DragonflyCoreTests" = {
          isa = "PBXNativeTarget";
-         buildConfigurationList = "OBJ_39";
+         buildConfigurationList = "OBJ_37";
          buildPhases = (
-            "OBJ_42",
-            "OBJ_45"
+            "OBJ_40",
+            "OBJ_43"
          );
          dependencies = (
-            "OBJ_47"
+            "OBJ_45"
          );
          name = "DragonflyCoreTests";
          productName = "DragonflyCoreTests";
@@ -55,9 +55,9 @@
       };
       "DragonflyCore::SwiftPMPackageDescription" = {
          isa = "PBXNativeTarget";
-         buildConfigurationList = "OBJ_28";
+         buildConfigurationList = "OBJ_26";
          buildPhases = (
-            "OBJ_31"
+            "OBJ_29"
          );
          dependencies = (
          );
@@ -79,7 +79,7 @@
             "en"
          );
          mainGroup = "OBJ_5";
-         productRefGroup = "OBJ_15";
+         productRefGroup = "OBJ_14";
          projectDirPath = ".";
          targets = (
             "DragonflyCore::DragonflyCore",
@@ -89,53 +89,57 @@
          );
       };
       "OBJ_10" = {
-         isa = "PBXFileReference";
-         path = "Packet.swift";
-         sourceTree = "<group>";
-      };
-      "OBJ_11" = {
          isa = "PBXGroup";
          children = (
-            "OBJ_12"
+            "OBJ_11"
          );
          name = "Tests";
          path = "";
          sourceTree = "SOURCE_ROOT";
       };
-      "OBJ_12" = {
+      "OBJ_11" = {
          isa = "PBXGroup";
          children = (
-            "OBJ_13",
-            "OBJ_14"
+            "OBJ_12",
+            "OBJ_13"
          );
          name = "DragonflyCoreTests";
          path = "Tests/DragonflyCoreTests";
          sourceTree = "SOURCE_ROOT";
       };
-      "OBJ_13" = {
+      "OBJ_12" = {
          isa = "PBXFileReference";
          path = "DragonflyCoreTests.swift";
          sourceTree = "<group>";
       };
-      "OBJ_14" = {
+      "OBJ_13" = {
          isa = "PBXFileReference";
          path = "XCTestManifests.swift";
          sourceTree = "<group>";
       };
-      "OBJ_15" = {
+      "OBJ_14" = {
          isa = "PBXGroup";
          children = (
-            "DragonflyCore::DragonflyCoreTests::Product",
-            "DragonflyCore::DragonflyCore::Product"
+            "DragonflyCore::DragonflyCore::Product",
+            "DragonflyCore::DragonflyCoreTests::Product"
          );
          name = "Products";
          path = "";
          sourceTree = "BUILT_PRODUCTS_DIR";
       };
-      "OBJ_18" = {
+      "OBJ_17" = {
          isa = "PBXFileReference";
          path = "README.md";
          sourceTree = "<group>";
+      };
+      "OBJ_19" = {
+         isa = "XCConfigurationList";
+         buildConfigurations = (
+            "OBJ_20",
+            "OBJ_21"
+         );
+         defaultConfigurationIsVisible = "0";
+         defaultConfigurationName = "Release";
       };
       "OBJ_2" = {
          isa = "XCConfigurationList";
@@ -147,13 +151,45 @@
          defaultConfigurationName = "Release";
       };
       "OBJ_20" = {
-         isa = "XCConfigurationList";
-         buildConfigurations = (
-            "OBJ_21",
-            "OBJ_22"
-         );
-         defaultConfigurationIsVisible = "0";
-         defaultConfigurationName = "Release";
+         isa = "XCBuildConfiguration";
+         buildSettings = {
+            ENABLE_TESTABILITY = "YES";
+            FRAMEWORK_SEARCH_PATHS = (
+               "$(inherited)",
+               "$(PLATFORM_DIR)/Developer/Library/Frameworks"
+            );
+            HEADER_SEARCH_PATHS = (
+               "$(inherited)"
+            );
+            INFOPLIST_FILE = "DragonflyCore.xcodeproj/DragonflyCore_Info.plist";
+            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
+            LD_RUNPATH_SEARCH_PATHS = (
+               "$(inherited)",
+               "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx"
+            );
+            MACOSX_DEPLOYMENT_TARGET = "10.10";
+            OTHER_CFLAGS = (
+               "$(inherited)"
+            );
+            OTHER_LDFLAGS = (
+               "$(inherited)"
+            );
+            OTHER_SWIFT_FLAGS = (
+               "$(inherited)"
+            );
+            PRODUCT_BUNDLE_IDENTIFIER = "DragonflyCore";
+            PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
+            PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+            SKIP_INSTALL = "YES";
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+               "$(inherited)"
+            );
+            SWIFT_VERSION = "5.0";
+            TARGET_NAME = "DragonflyCore";
+            TVOS_DEPLOYMENT_TARGET = "9.0";
+            WATCHOS_DEPLOYMENT_TARGET = "2.0";
+         };
+         name = "Debug";
       };
       "OBJ_21" = {
          isa = "XCBuildConfiguration";
@@ -194,79 +230,33 @@
             TVOS_DEPLOYMENT_TARGET = "9.0";
             WATCHOS_DEPLOYMENT_TARGET = "2.0";
          };
-         name = "Debug";
-      };
-      "OBJ_22" = {
-         isa = "XCBuildConfiguration";
-         buildSettings = {
-            ENABLE_TESTABILITY = "YES";
-            FRAMEWORK_SEARCH_PATHS = (
-               "$(inherited)",
-               "$(PLATFORM_DIR)/Developer/Library/Frameworks"
-            );
-            HEADER_SEARCH_PATHS = (
-               "$(inherited)"
-            );
-            INFOPLIST_FILE = "DragonflyCore.xcodeproj/DragonflyCore_Info.plist";
-            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
-            LD_RUNPATH_SEARCH_PATHS = (
-               "$(inherited)",
-               "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx"
-            );
-            MACOSX_DEPLOYMENT_TARGET = "10.10";
-            OTHER_CFLAGS = (
-               "$(inherited)"
-            );
-            OTHER_LDFLAGS = (
-               "$(inherited)"
-            );
-            OTHER_SWIFT_FLAGS = (
-               "$(inherited)"
-            );
-            PRODUCT_BUNDLE_IDENTIFIER = "DragonflyCore";
-            PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
-            PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
-            SKIP_INSTALL = "YES";
-            SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
-               "$(inherited)"
-            );
-            SWIFT_VERSION = "5.0";
-            TARGET_NAME = "DragonflyCore";
-            TVOS_DEPLOYMENT_TARGET = "9.0";
-            WATCHOS_DEPLOYMENT_TARGET = "2.0";
-         };
          name = "Release";
       };
-      "OBJ_23" = {
+      "OBJ_22" = {
          isa = "PBXSourcesBuildPhase";
          files = (
-            "OBJ_24",
-            "OBJ_25"
+            "OBJ_23"
          );
       };
-      "OBJ_24" = {
+      "OBJ_23" = {
          isa = "PBXBuildFile";
          fileRef = "OBJ_9";
       };
-      "OBJ_25" = {
-         isa = "PBXBuildFile";
-         fileRef = "OBJ_10";
-      };
-      "OBJ_26" = {
+      "OBJ_24" = {
          isa = "PBXFrameworksBuildPhase";
          files = (
          );
       };
-      "OBJ_28" = {
+      "OBJ_26" = {
          isa = "XCConfigurationList";
          buildConfigurations = (
-            "OBJ_29",
-            "OBJ_30"
+            "OBJ_27",
+            "OBJ_28"
          );
          defaultConfigurationIsVisible = "0";
          defaultConfigurationName = "Release";
       };
-      "OBJ_29" = {
+      "OBJ_27" = {
          isa = "XCBuildConfiguration";
          buildSettings = {
             LD = "/usr/bin/true";
@@ -283,6 +273,30 @@
             SWIFT_VERSION = "5.0";
          };
          name = "Debug";
+      };
+      "OBJ_28" = {
+         isa = "XCBuildConfiguration";
+         buildSettings = {
+            LD = "/usr/bin/true";
+            OTHER_SWIFT_FLAGS = (
+               "-swift-version",
+               "5",
+               "-I",
+               "$(TOOLCHAIN_DIR)/usr/lib/swift/pm/4_2",
+               "-target",
+               "x86_64-apple-macosx10.10",
+               "-sdk",
+               "/Applications/Xcode10.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
+            );
+            SWIFT_VERSION = "5.0";
+         };
+         name = "Release";
+      };
+      "OBJ_29" = {
+         isa = "PBXSourcesBuildPhase";
+         files = (
+            "OBJ_30"
+         );
       };
       "OBJ_3" = {
          isa = "XCBuildConfiguration";
@@ -326,66 +340,120 @@
          name = "Debug";
       };
       "OBJ_30" = {
-         isa = "XCBuildConfiguration";
-         buildSettings = {
-            LD = "/usr/bin/true";
-            OTHER_SWIFT_FLAGS = (
-               "-swift-version",
-               "5",
-               "-I",
-               "$(TOOLCHAIN_DIR)/usr/lib/swift/pm/4_2",
-               "-target",
-               "x86_64-apple-macosx10.10",
-               "-sdk",
-               "/Applications/Xcode10.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
-            );
-            SWIFT_VERSION = "5.0";
-         };
-         name = "Release";
-      };
-      "OBJ_31" = {
-         isa = "PBXSourcesBuildPhase";
-         files = (
-            "OBJ_32"
-         );
-      };
-      "OBJ_32" = {
          isa = "PBXBuildFile";
          fileRef = "OBJ_6";
       };
-      "OBJ_34" = {
+      "OBJ_32" = {
          isa = "XCConfigurationList";
          buildConfigurations = (
-            "OBJ_35",
-            "OBJ_36"
+            "OBJ_33",
+            "OBJ_34"
          );
          defaultConfigurationIsVisible = "0";
          defaultConfigurationName = "Release";
       };
-      "OBJ_35" = {
+      "OBJ_33" = {
          isa = "XCBuildConfiguration";
          buildSettings = {
          };
          name = "Debug";
       };
-      "OBJ_36" = {
+      "OBJ_34" = {
          isa = "XCBuildConfiguration";
          buildSettings = {
          };
          name = "Release";
       };
-      "OBJ_37" = {
+      "OBJ_35" = {
          isa = "PBXTargetDependency";
          target = "DragonflyCore::DragonflyCoreTests";
       };
-      "OBJ_39" = {
+      "OBJ_37" = {
          isa = "XCConfigurationList";
          buildConfigurations = (
-            "OBJ_40",
-            "OBJ_41"
+            "OBJ_38",
+            "OBJ_39"
          );
          defaultConfigurationIsVisible = "0";
          defaultConfigurationName = "Release";
+      };
+      "OBJ_38" = {
+         isa = "XCBuildConfiguration";
+         buildSettings = {
+            CLANG_ENABLE_MODULES = "YES";
+            EMBEDDED_CONTENT_CONTAINS_SWIFT = "YES";
+            FRAMEWORK_SEARCH_PATHS = (
+               "$(inherited)",
+               "$(PLATFORM_DIR)/Developer/Library/Frameworks"
+            );
+            HEADER_SEARCH_PATHS = (
+               "$(inherited)"
+            );
+            INFOPLIST_FILE = "DragonflyCore.xcodeproj/DragonflyCoreTests_Info.plist";
+            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
+            LD_RUNPATH_SEARCH_PATHS = (
+               "$(inherited)",
+               "@loader_path/../Frameworks",
+               "@loader_path/Frameworks"
+            );
+            MACOSX_DEPLOYMENT_TARGET = "10.10";
+            OTHER_CFLAGS = (
+               "$(inherited)"
+            );
+            OTHER_LDFLAGS = (
+               "$(inherited)"
+            );
+            OTHER_SWIFT_FLAGS = (
+               "$(inherited)"
+            );
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+               "$(inherited)"
+            );
+            SWIFT_VERSION = "5.0";
+            TARGET_NAME = "DragonflyCoreTests";
+            TVOS_DEPLOYMENT_TARGET = "9.0";
+            WATCHOS_DEPLOYMENT_TARGET = "2.0";
+         };
+         name = "Debug";
+      };
+      "OBJ_39" = {
+         isa = "XCBuildConfiguration";
+         buildSettings = {
+            CLANG_ENABLE_MODULES = "YES";
+            EMBEDDED_CONTENT_CONTAINS_SWIFT = "YES";
+            FRAMEWORK_SEARCH_PATHS = (
+               "$(inherited)",
+               "$(PLATFORM_DIR)/Developer/Library/Frameworks"
+            );
+            HEADER_SEARCH_PATHS = (
+               "$(inherited)"
+            );
+            INFOPLIST_FILE = "DragonflyCore.xcodeproj/DragonflyCoreTests_Info.plist";
+            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
+            LD_RUNPATH_SEARCH_PATHS = (
+               "$(inherited)",
+               "@loader_path/../Frameworks",
+               "@loader_path/Frameworks"
+            );
+            MACOSX_DEPLOYMENT_TARGET = "10.10";
+            OTHER_CFLAGS = (
+               "$(inherited)"
+            );
+            OTHER_LDFLAGS = (
+               "$(inherited)"
+            );
+            OTHER_SWIFT_FLAGS = (
+               "$(inherited)"
+            );
+            SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
+               "$(inherited)"
+            );
+            SWIFT_VERSION = "5.0";
+            TARGET_NAME = "DragonflyCoreTests";
+            TVOS_DEPLOYMENT_TARGET = "9.0";
+            WATCHOS_DEPLOYMENT_TARGET = "2.0";
+         };
+         name = "Release";
       };
       "OBJ_4" = {
          isa = "XCBuildConfiguration";
@@ -425,109 +493,31 @@
          name = "Release";
       };
       "OBJ_40" = {
-         isa = "XCBuildConfiguration";
-         buildSettings = {
-            CLANG_ENABLE_MODULES = "YES";
-            EMBEDDED_CONTENT_CONTAINS_SWIFT = "YES";
-            FRAMEWORK_SEARCH_PATHS = (
-               "$(inherited)",
-               "$(PLATFORM_DIR)/Developer/Library/Frameworks"
-            );
-            HEADER_SEARCH_PATHS = (
-               "$(inherited)"
-            );
-            INFOPLIST_FILE = "DragonflyCore.xcodeproj/DragonflyCoreTests_Info.plist";
-            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
-            LD_RUNPATH_SEARCH_PATHS = (
-               "$(inherited)",
-               "@loader_path/../Frameworks",
-               "@loader_path/Frameworks"
-            );
-            MACOSX_DEPLOYMENT_TARGET = "10.10";
-            OTHER_CFLAGS = (
-               "$(inherited)"
-            );
-            OTHER_LDFLAGS = (
-               "$(inherited)"
-            );
-            OTHER_SWIFT_FLAGS = (
-               "$(inherited)"
-            );
-            SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
-               "$(inherited)"
-            );
-            SWIFT_VERSION = "5.0";
-            TARGET_NAME = "DragonflyCoreTests";
-            TVOS_DEPLOYMENT_TARGET = "9.0";
-            WATCHOS_DEPLOYMENT_TARGET = "2.0";
-         };
-         name = "Debug";
-      };
-      "OBJ_41" = {
-         isa = "XCBuildConfiguration";
-         buildSettings = {
-            CLANG_ENABLE_MODULES = "YES";
-            EMBEDDED_CONTENT_CONTAINS_SWIFT = "YES";
-            FRAMEWORK_SEARCH_PATHS = (
-               "$(inherited)",
-               "$(PLATFORM_DIR)/Developer/Library/Frameworks"
-            );
-            HEADER_SEARCH_PATHS = (
-               "$(inherited)"
-            );
-            INFOPLIST_FILE = "DragonflyCore.xcodeproj/DragonflyCoreTests_Info.plist";
-            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
-            LD_RUNPATH_SEARCH_PATHS = (
-               "$(inherited)",
-               "@loader_path/../Frameworks",
-               "@loader_path/Frameworks"
-            );
-            MACOSX_DEPLOYMENT_TARGET = "10.10";
-            OTHER_CFLAGS = (
-               "$(inherited)"
-            );
-            OTHER_LDFLAGS = (
-               "$(inherited)"
-            );
-            OTHER_SWIFT_FLAGS = (
-               "$(inherited)"
-            );
-            SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
-               "$(inherited)"
-            );
-            SWIFT_VERSION = "5.0";
-            TARGET_NAME = "DragonflyCoreTests";
-            TVOS_DEPLOYMENT_TARGET = "9.0";
-            WATCHOS_DEPLOYMENT_TARGET = "2.0";
-         };
-         name = "Release";
-      };
-      "OBJ_42" = {
          isa = "PBXSourcesBuildPhase";
          files = (
-            "OBJ_43",
-            "OBJ_44"
+            "OBJ_41",
+            "OBJ_42"
          );
       };
-      "OBJ_43" = {
+      "OBJ_41" = {
+         isa = "PBXBuildFile";
+         fileRef = "OBJ_12";
+      };
+      "OBJ_42" = {
          isa = "PBXBuildFile";
          fileRef = "OBJ_13";
       };
-      "OBJ_44" = {
-         isa = "PBXBuildFile";
-         fileRef = "OBJ_14";
-      };
-      "OBJ_45" = {
+      "OBJ_43" = {
          isa = "PBXFrameworksBuildPhase";
          files = (
-            "OBJ_46"
+            "OBJ_44"
          );
       };
-      "OBJ_46" = {
+      "OBJ_44" = {
          isa = "PBXBuildFile";
          fileRef = "DragonflyCore::DragonflyCore::Product";
       };
-      "OBJ_47" = {
+      "OBJ_45" = {
          isa = "PBXTargetDependency";
          target = "DragonflyCore::DragonflyCore";
       };
@@ -536,9 +526,9 @@
          children = (
             "OBJ_6",
             "OBJ_7",
-            "OBJ_11",
-            "OBJ_15",
-            "OBJ_18"
+            "OBJ_10",
+            "OBJ_14",
+            "OBJ_17"
          );
          path = "";
          sourceTree = "<group>";
@@ -561,8 +551,7 @@
       "OBJ_8" = {
          isa = "PBXGroup";
          children = (
-            "OBJ_9",
-            "OBJ_10"
+            "OBJ_9"
          );
          name = "DragonflyCore";
          path = "Sources/DragonflyCore";
@@ -570,7 +559,7 @@
       };
       "OBJ_9" = {
          isa = "PBXFileReference";
-         path = "DragonflyCore.swift";
+         path = "Packet.swift";
          sourceTree = "<group>";
       };
    };
