@@ -112,6 +112,41 @@ final class DragonflyCoreTests: XCTestCase {
         XCTAssertEqual(connect.keepAlive, parsed.keepAlive)
         XCTAssertEqual(parsed.clientID, clientID)
     }
+    
+    func testThatFullConnectPacketCanBeDecoded() throws {
+        // Given
+        let clientID = "TestID"
+        let willTopic = "WillTopic"
+        let willMessage = Data("WillMessage".utf8)
+        let username = "Username"
+        let password = "Password"
+        let connect = Connect(cleanSession: false,
+                              storeWill: true,
+                              willQoS: .two,
+                              retainWill: true,
+                              keepAlive: 5,
+                              clientID: clientID,
+                              willTopic: willTopic,
+                              willMessage: willMessage,
+                              username: username,
+                              password: password)
+        
+        // When
+        let data = connect.packet.encoded[2...]
+        let parsed = try Connect(packet: data)
+        
+        // Then
+        XCTAssertEqual(connect.cleanSession, parsed.cleanSession)
+        XCTAssertEqual(connect.storeWill, parsed.storeWill)
+        XCTAssertEqual(connect.willQoS, parsed.willQoS)
+        XCTAssertEqual(connect.retainWill, parsed.retainWill)
+        XCTAssertEqual(connect.keepAlive, parsed.keepAlive)
+        XCTAssertEqual(parsed.clientID, clientID)
+        XCTAssertEqual(parsed.willTopic, willTopic)
+        XCTAssertEqual(parsed.willMessage, willMessage)
+        XCTAssertEqual(parsed.username, username)
+        XCTAssertEqual(parsed.password, password)
+    }
 
     static var allTests = [
         ("testOneByteVariableLengthParsing", testOneByteRemainingLengthParsing),

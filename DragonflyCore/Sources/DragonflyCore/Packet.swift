@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct FixedHeader {
+public struct ControlByte {
     public enum PacketType: UInt8 {
         case connect = 0x01
         case connectAcknowledgement = 0x02
@@ -25,16 +25,16 @@ public struct FixedHeader {
         case pingResponse = 0x0D
     }
     
-    public static let connect = FixedHeader(type: .connect)
-    public static func publish(firstAttempt: Bool, qos: QoS, retain: Bool) -> FixedHeader {
+    public static let connect = ControlByte(type: .connect)
+    public static func publish(firstAttempt: Bool, qos: QoS, retain: Bool) -> ControlByte {
         let dupFlag: UInt8 = (firstAttempt) ? 0b1000 : 0b0000
         let qosBits = qos.rawValue << 1
         let retainBit: UInt8 = (retain) ? 0x01 : 0x00
         
-        return FixedHeader(type: .publish, flags: (dupFlag | qosBits | retainBit))
+        return ControlByte(type: .publish, flags: (dupFlag | qosBits | retainBit))
     }
-    public static let ping = FixedHeader(type: .ping)
-    public static let subscribe = FixedHeader(type: .subscribe, flags: 0x02)
+    public static let ping = ControlByte(type: .ping)
+    public static let subscribe = ControlByte(type: .subscribe, flags: 0x02)
     
     public let type: PacketType
     public let flags: UInt8
@@ -52,7 +52,17 @@ public struct FixedHeader {
     }
     
     public var value: UInt8 { return UInt8(upper: type.rawValue, lower: flags) }
-    public var data: Data { var byte = value; return Data(bytes: &byte, count: 1) }
+    public var data: Data { return Data([value]) }
+}
+
+public struct FixedHeader {
+    public let controlByte: ControlByte
+    public let remainingLength: UInt32
+    
+    public init(controlByte: ControlByte, remainingLength: UInt32) {
+        self.controlByte = controlByte
+        self.remainingLength = remainingLength
+    }
 }
 
 public extension UInt8 {
@@ -75,6 +85,13 @@ public extension UInt8 {
     
     var hexString: String {
         return "0x\(String(format: "%02X", self))"
+    }
+    
+    var binaryString: String {
+        let base = String(self, radix: 2)
+        let padding = String(repeating: "0", count: (8 - base.count))
+        
+        return "0b\(padding)\(base)"
     }
 }
 
@@ -176,6 +193,14 @@ public extension Data {
         append(bytes.first)
         append(bytes.second)
     }
+    
+    var hexDescription: String {
+        return map { $0.hexString }.joined(separator: "\n")
+    }
+    
+    var binaryDescription: String {
+        return map { $0.binaryString }.joined(separator: "\n")
+    }
 }
 
 public extension Bool {
@@ -193,7 +218,7 @@ public struct VariableHeader {
 }
 
 public struct Packet {
-    public let fixedHeader: FixedHeader
+    public let fixedHeader: ControlByte
     public let variableHeader: VariableHeader
     public let payload: Payload
     
@@ -215,7 +240,7 @@ public protocol PacketDecodable {
 }
 
 public protocol PacketEncodable {
-    var fixedHeader: FixedHeader { get }
+    var fixedHeader: ControlByte { get }
     var variableHeader: VariableHeader { get }
     var payload: Payload { get }
 }
@@ -284,16 +309,21 @@ public struct Connect {
     var encodedFlags: UInt8 {
         var flags: UInt8 = 0x00
         
-        if cleanSession { flags |= 0x02 }
-        if username != nil { flags |= 0x80 }
-        if password != nil { flags |= 0x40 }
+        if cleanSession { flags |= 0b00000010 }
+        if storeWill {
+            flags |= 0b00000100
+            flags |= (willQoS.rawValue << 3)
+            flags |= (retainWill.byte << 5)
+        }
+        if username != nil { flags |= 0b10000000 }
+        if password != nil { flags |= 0b01000000 }
         
         return flags
     }
 }
 
 extension Connect: PacketEncodable {
-    public var fixedHeader: FixedHeader { return .connect }
+    public var fixedHeader: ControlByte { return .connect }
     
     public var variableHeader: VariableHeader {
         var data = Payload()
@@ -311,6 +341,13 @@ extension Connect: PacketEncodable {
         
         data.append(clientID)
         
+        if storeWill {
+            guard let willTopic = willTopic, let willMessage = willMessage else { fatalError("Will requires topic and message values") } // TODO: Replace with actual error handling or change type.
+            
+            data.append(willTopic)
+            data.append(willMessage)
+        }
+        
         if let username = username {
             data.append(username)
         }
@@ -323,7 +360,7 @@ extension Connect: PacketEncodable {
     }
 }
 
-enum ParseError: Error { case error, malformedRemainingLength }
+public enum ParseError: Error { case error, malformedRemainingLength }
 
 extension Connect: PacketDecodable {
     // This will need to be from `Packet`
@@ -334,15 +371,15 @@ extension Connect: PacketDecodable {
         
         let connectFlags = parsing.eat()
         
-        guard connectFlags & 0b00000001 == 0 else { throw ParseError.error } // Reserved bit isn't 0, should disconnect.
+        guard (connectFlags & 0b00000001) == 0 else { throw ParseError.error } // Reserved bit isn't 0, should disconnect.
         
-        cleanSession = Bool(connectFlags & 0b00000010)
-        storeWill = Bool(connectFlags & 0b00000100)
-        willQoS = (storeWill) ? WillQoS(rawValue: (connectFlags & 0b00011000))! : .zero
-        retainWill = (storeWill) ? Bool(connectFlags & 0b00100000) : false
+        cleanSession = Bool((connectFlags & 0b00000010) >> 1)
+        storeWill = Bool((connectFlags & 0b00000100) >> 2)
+        willQoS = (storeWill) ? WillQoS(rawValue: ((connectFlags & 0b00011000) >> 3)) ?? .zero : .zero // How to handle 3?
+        retainWill = (storeWill) ? Bool((connectFlags & 0b00100000) >> 5) : false
         
-        let hasUsername = Bool(connectFlags & 0b10000000)
-        let hasPassword = Bool(connectFlags & 0b01000000)
+        let hasUsername = Bool((connectFlags & 0b10000000) >> 7)
+        let hasPassword = Bool((connectFlags & 0b01000000) >> 6)
         
         keepAlive = UInt16(parsing.eat(2))
         
@@ -351,7 +388,7 @@ extension Connect: PacketDecodable {
         if storeWill {
             willTopic = try parsing.eatString()
             let rawLength = parsing.eat(2)
-            let messageLength = UInt16((first: rawLength[0], second: rawLength[1]))
+            let messageLength = UInt16(rawLength)
             if messageLength > 0 {
                 willMessage = Data(parsing.eat(Int(messageLength)))
             } else {
@@ -376,8 +413,8 @@ extension Connect: PacketDecodable {
     }
 }
 
-struct ConnectAcknowledgement {
-    enum Response: UInt8 {
+public struct ConnectAcknowledgement {
+    public enum Response: UInt8 {
         case accepted = 0x00
         case badProtocol = 0x01
         case clientIDRejected = 0x02
@@ -386,8 +423,13 @@ struct ConnectAcknowledgement {
         case notAuthorized = 0x05
     }
     
-    let response: Response
-    let isSessionPresent: Bool
+    public let response: Response
+    public let isSessionPresent: Bool
+    
+    public init(response: Response, isSessionPresent: Bool) {
+        self.response = response
+        self.isSessionPresent = isSessionPresent
+    }
     
     init?(data: Data) {
         guard data.count == 2, let first = data.first, let second = data.last, let response = Response(rawValue: second) else { return nil }
@@ -398,11 +440,11 @@ struct ConnectAcknowledgement {
 }
 
 extension ConnectAcknowledgement: PacketEncodable {
-    var fixedHeader: FixedHeader {
-        return FixedHeader(type: .connectAcknowledgement)
+    public var fixedHeader: ControlByte {
+        return ControlByte(type: .connectAcknowledgement)
     }
     
-    var variableHeader: VariableHeader {
+    public var variableHeader: VariableHeader {
         var payload = Payload()
         payload.append(isSessionPresent.byte)
         payload.append(response.rawValue)
@@ -412,11 +454,11 @@ extension ConnectAcknowledgement: PacketEncodable {
 }
 
 public struct Ping: PacketEncodable {
-    public let fixedHeader: FixedHeader = .ping
+    public let fixedHeader: ControlByte = .ping
 }
 
 public struct PingResponse: PacketEncodable {
-    public let fixedHeader: FixedHeader = FixedHeader(type: .pingResponse)
+    public let fixedHeader: ControlByte = ControlByte(type: .pingResponse)
 }
 
 public enum QoS: UInt8 {
@@ -429,7 +471,7 @@ public struct Subscribe: PacketEncodable {
     public let packetID: UInt16
     public let topics: [String: QoS]
     
-    public let fixedHeader: FixedHeader = .subscribe
+    public let fixedHeader: ControlByte = .subscribe
     
     public var variableHeader: VariableHeader {
         var data = Payload()
@@ -490,7 +532,7 @@ public struct Publish {
     public let flags: Flags
     public let message: Message
     
-    public init?(header: FixedHeader, data: Data) {
+    public init?(header: ControlByte, data: Data) {
         flags = Flags(header.flags)
         
         let lengthBytes = data.prefix(2)
@@ -626,4 +668,28 @@ public extension Data {
         
         return length
     }
+    
+    func parseRemainingLength() throws -> (count: UInt8, length: UInt32) {
+        var multiplier: UInt32 = 1
+        var value: UInt32 = 0
+        var byte: UInt8 = 0
+        var currentIndex = startIndex
+        repeat {
+            guard currentIndex != endIndex else { throw RemainingLengthError.incomplete }
+            
+            guard multiplier <= (128 * 128 * 128) else { throw RemainingLengthError.malformed }
+            
+            byte = self[currentIndex]
+            value += (UInt32((byte & 127)) * multiplier)
+            multiplier *= 128
+            currentIndex = index(after: currentIndex)
+        } while ((byte & 128) != 0)// && !isEmpty
+        
+        return (count: UInt8(currentIndex - startIndex), length: value)
+    }
+}
+
+public enum RemainingLengthError: Error {
+    case malformed
+    case incomplete
 }

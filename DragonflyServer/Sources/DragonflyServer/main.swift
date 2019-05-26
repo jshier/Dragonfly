@@ -9,8 +9,16 @@ let bootstrap = ServerBootstrap(group: group)
     .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
     // Set the handlers that are applied to the accepted Channels
     .childChannelInitializer { channel in
-        channel.pipeline.addHandler(DebugInboundEventsHandler()).flatMap { _ in
-            channel.pipeline.addHandler(DebugOutboundEventsHandler())
+        channel.pipeline.addHandler(DebugInboundEventsHandler(), name: "DebugInbound1").flatMap { _ in
+            channel.pipeline.addHandler(ByteToMessageHandler(PacketDecoder()), name: "PacketDecoder")
+        }.flatMap { _ in
+            channel.pipeline.addHandler(DebugInboundEventsHandler(), name: "DebugInbound2")
+        }.flatMap { _ in
+            channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound2")
+        }.flatMap { _ in
+            channel.pipeline.addHandler(PacketHandler(), name: "PacketHandler")
+        }.flatMap { _ in
+            channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound1")
         }
     }
     // Enable TCP_NODELAY and SO_REUSEADDR for the accepted Channels
