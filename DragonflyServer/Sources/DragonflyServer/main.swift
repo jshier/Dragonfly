@@ -14,6 +14,10 @@ let bootstrap = ServerBootstrap(group: group)
         }.flatMap { _ in
             channel.pipeline.addHandler(DebugInboundEventsHandler(), name: "DebugInbound2")
         }.flatMap { _ in
+            channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound3")
+        }.flatMap { _ in
+            channel.pipeline.addHandler(MessageToByteHandler(PacketEncoder()), name: "PacketEncoder")
+        }.flatMap { _ in
             channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound2")
         }.flatMap { _ in
             channel.pipeline.addHandler(PacketHandler(), name: "PacketHandler")

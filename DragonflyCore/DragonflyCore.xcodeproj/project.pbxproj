@@ -120,8 +120,8 @@
       "OBJ_14" = {
          isa = "PBXGroup";
          children = (
-            "DragonflyCore::DragonflyCore::Product",
-            "DragonflyCore::DragonflyCoreTests::Product"
+            "DragonflyCore::DragonflyCoreTests::Product",
+            "DragonflyCore::DragonflyCore::Product"
          );
          name = "Products";
          path = "";

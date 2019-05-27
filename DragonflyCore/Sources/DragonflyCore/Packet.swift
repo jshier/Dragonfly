@@ -9,6 +9,8 @@
 import Foundation
 
 public struct ControlByte {
+    enum Error: Swift.Error { case invalidFlags }
+    
     public enum PacketType: UInt8 {
         case connect = 0x01
         case connectAcknowledgement = 0x02
@@ -23,11 +25,18 @@ public struct ControlByte {
         case unsubscribeAcknowledgement = 0x0B
         case ping = 0x0C
         case pingResponse = 0x0D
+        
+        func validateFlags(_ flags: UInt8) -> Bool {
+            switch self {
+            case .subscribe: return (0b0010 & flags) == 0b0010
+            default: return true
+            }
+        }
     }
     
     public static let connect = ControlByte(type: .connect)
     public static func publish(firstAttempt: Bool, qos: QoS, retain: Bool) -> ControlByte {
-        let dupFlag: UInt8 = (firstAttempt) ? 0b1000 : 0b0000
+        let dupFlag: UInt8 = (firstAttempt) ? 0b0000 : 0b1000
         let qosBits = qos.rawValue << 1
         let retainBit: UInt8 = (retain) ? 0x01 : 0x00
         
@@ -51,8 +60,29 @@ public struct ControlByte {
         flags = byte & 0x0F
     }
     
+    public init(_ byte: UInt8) throws {
+        let (upper, lower) = byte.halves
+        type = try PacketType(rawValue: upper).get()
+        if type.validateFlags(lower) {
+            flags = lower
+        } else {
+            throw Error.invalidFlags
+        }
+    }
+    
     public var value: UInt8 { return UInt8(upper: type.rawValue, lower: flags) }
     public var data: Data { return Data([value]) }
+}
+
+public extension Optional {
+    enum Error: Swift.Error { case unexpectedNil(description: String) }
+    
+    func get(producingErrorDescription description: String = "Unexpectedly found nil instead of \(Wrapped.self).") throws -> Wrapped {
+        switch self {
+        case let .some(value): return value
+        case .none: throw Error.unexpectedNil(description: description)
+        }
+    }
 }
 
 public struct FixedHeader {
@@ -217,7 +247,7 @@ public struct VariableHeader {
     var data = Payload()
 }
 
-public struct Packet {
+public struct OldPacket {
     public let fixedHeader: ControlByte
     public let variableHeader: VariableHeader
     public let payload: Payload
@@ -227,7 +257,11 @@ public struct Packet {
         
         packet.append(fixedHeader.data)
         
-        let remainingData = variableHeader.data.data + payload.data
+        let variableData = variableHeader.data.data
+        let payloadData = payload.data
+        
+        var remainingData = variableData
+        remainingData.append(payloadData)
         packet.appendEncodedLength(remainingData.count)
         packet.append(remainingData)
         
@@ -249,8 +283,8 @@ public extension PacketEncodable {
     var variableHeader: VariableHeader { return VariableHeader() }
     var payload: Payload { return Payload() }
     
-    var packet: Packet {
-        return Packet(fixedHeader: fixedHeader, variableHeader: variableHeader, payload: payload)
+    var packet: OldPacket {
+        return OldPacket(fixedHeader: fixedHeader, variableHeader: variableHeader, payload: payload)
     }
 }
 
@@ -276,7 +310,7 @@ public struct Connect {
     public let keepAlive: UInt16
     public let clientID: String
     public let willTopic: String?
-    public let willMessage: Data?
+    public let willMessage: String?
     public let username: String?
     public let password: String?
     
@@ -289,7 +323,7 @@ public struct Connect {
                 keepAlive: UInt16,
                 clientID: String,
                 willTopic: String?,
-                willMessage: Data?,
+                willMessage: String?,
                 username: String?,
                 password: String?) {
         self.protocolName = protocolName
@@ -387,13 +421,14 @@ extension Connect: PacketDecodable {
         // TODO: If empty string and cleanSession == false, return idrejected and close connection
         if storeWill {
             willTopic = try parsing.eatString()
-            let rawLength = parsing.eat(2)
-            let messageLength = UInt16(rawLength)
-            if messageLength > 0 {
-                willMessage = Data(parsing.eat(Int(messageLength)))
-            } else {
-                willMessage = nil
-            }
+            willMessage = try parsing.eatString()
+//            let rawLength = parsing.eat(2)
+//            let messageLength = UInt16(rawLength)
+//            if messageLength > 0 {
+//                willMessage = Data(parsing.eat(Int(messageLength)))
+//            } else {
+//                willMessage = nil
+//            }
         } else {
             willTopic = nil
             willMessage = nil
@@ -455,10 +490,14 @@ extension ConnectAcknowledgement: PacketEncodable {
 
 public struct Ping: PacketEncodable {
     public let fixedHeader: ControlByte = .ping
+    
+    public init() {}
 }
 
 public struct PingResponse: PacketEncodable {
     public let fixedHeader: ControlByte = ControlByte(type: .pingResponse)
+    
+    public init() {}
 }
 
 public enum QoS: UInt8 {
@@ -490,6 +529,11 @@ public struct Subscribe: PacketEncodable {
         
         return data
     }
+    
+    public init(packetID: UInt16, topics: [String: QoS]) {
+        self.packetID = packetID
+        self.topics = topics
+    }
 }
 
 public struct SubscribeAcknowledgement {
@@ -503,10 +547,35 @@ public struct SubscribeAcknowledgement {
     public let packetID: UInt16
     public let returnCodes: [ReturnCode]
     
+    public init(packetID: UInt16, returnCodes: [ReturnCode]) {
+        self.packetID = packetID
+        self.returnCodes = returnCodes
+    }
+    
     public init?(data: Data) {
         packetID = UInt16((first: data.first!, second: data.first!.advanced(by: 1)))
         let codes = data.dropFirst(2)
         returnCodes = codes.compactMap { ReturnCode(rawValue: $0) }
+    }
+}
+
+extension SubscribeAcknowledgement: PacketEncodable {
+    public var fixedHeader: ControlByte {
+        return .init(type: .subscribeAcknowledgement)
+    }
+    
+    public var variableHeader: VariableHeader {
+        var data = Payload()
+        data.append(packetID)
+        
+        return VariableHeader(data: data)
+    }
+    
+    public var payload: Payload {
+        var data = Payload()
+        returnCodes.forEach { data.append($0.rawValue) }
+        
+        return data
     }
 }
 
@@ -517,20 +586,43 @@ public struct Publish {
         public let shouldRetain: Bool
         
         public init(_ flags: UInt8) {
-            firstAttempt = (flags & 0x08) == 0x08
+            firstAttempt = (flags & 0x08) == 0
             qos = QoS(rawValue: (flags & 0x06) >> 1)!
             shouldRetain = (flags & 0x01) == 0x01
         }
+        
+        public init(firstAttempt: Bool, qos: QoS, shouldRetain: Bool) {
+            self.firstAttempt = firstAttempt
+            self.qos = qos
+            self.shouldRetain = shouldRetain
+        }
+        
+//        public init(_ flags: UInt8) throws {
+//            firstAttempt = Bool(flags & 0x08)
+//            qos = try QoS(rawValue: (flags & 0x06) >> 1).get()
+//            shouldRetain = Bool(flags & 0x01)
+//        }
     }
     
     public struct Message {
         public let topic: String
         public let payload: Data
+        
+        public init(topic: String, payload: Data) {
+            self.topic = topic
+            self.payload = payload
+        }
     }
     
-    public let packetID: UInt16
     public let flags: Flags
+    public let packetID: UInt16
     public let message: Message
+    
+    public init(flags: Flags, packetID: UInt16, message: Message) {
+        self.flags = flags
+        self.packetID = packetID
+        self.message = message
+    }
     
     public init?(header: ControlByte, data: Data) {
         flags = Flags(header.flags)
@@ -551,6 +643,51 @@ public struct Publish {
         }
         
         message = Message(topic: topic, payload: payload)
+    }
+}
+
+extension Publish: PacketEncodable {
+    public var fixedHeader: ControlByte {
+        return .publish(firstAttempt: flags.firstAttempt, qos: flags.qos, retain: flags.shouldRetain)
+    }
+    
+    public var variableHeader: VariableHeader {
+        var data = Payload()
+        data.append(message.topic)
+        if flags.qos != .atMostOnce {
+            data.append(packetID)
+        }
+        
+        
+        return VariableHeader(data: data)
+    }
+    
+    public var payload: Payload {
+        var payload = Payload()
+        payload.append(message.payload)
+        
+        return payload
+    }
+}
+
+public struct PublishAcknowledgement {
+    public let packetID: UInt16
+    
+    public init(packetID: UInt16) {
+        self.packetID = packetID
+    }
+}
+
+extension PublishAcknowledgement: PacketEncodable {
+    public var fixedHeader: ControlByte {
+        return .init(type: .publishAcknowledgement)
+    }
+    
+    public var variableHeader: VariableHeader {
+        var data = Payload()
+        data.append(packetID)
+        
+        return VariableHeader(data: data)
     }
 }
 

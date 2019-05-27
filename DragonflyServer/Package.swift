@@ -13,7 +13,7 @@ let package = Package(
     targets: [
         .target(
             name: "DragonflyServer",
-            dependencies: ["NIO", "NIOExtras", "DragonflyCore"]),
+            dependencies: ["NIO", "NIOFoundationCompat", "NIOExtras", "DragonflyCore"]),
         .testTarget(
             name: "DragonflyServerTests",
             dependencies: ["DragonflyServer"]),
