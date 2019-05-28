@@ -25,10 +25,11 @@ public struct ControlByte {
         case unsubscribeAcknowledgement = 0x0B
         case ping = 0x0C
         case pingResponse = 0x0D
+        case disconnect = 0x0E
         
         func validateFlags(_ flags: UInt8) -> Bool {
             switch self {
-            case .subscribe: return (0b0010 & flags) == 0b0010
+            case .subscribe: return Bool(byte: flags, usingMask: 0b0010)
             default: return true
             }
         }
@@ -240,6 +241,10 @@ public extension Bool {
     
     init(_ byte: UInt8) {
         self = (byte & 0x01) == 0x01
+    }
+    
+    init(byte: UInt8, usingMask mask: UInt8) {
+        self = (byte & mask) == mask
     }
 }
 
@@ -586,9 +591,9 @@ public struct Publish {
         public let shouldRetain: Bool
         
         public init(_ flags: UInt8) {
-            firstAttempt = (flags & 0x08) == 0
+            firstAttempt = !Bool(byte: flags, usingMask: 0x08)
             qos = QoS(rawValue: (flags & 0x06) >> 1)!
-            shouldRetain = (flags & 0x01) == 0x01
+            shouldRetain = Bool(byte: flags, usingMask: 0x01)
         }
         
         public init(firstAttempt: Bool, qos: QoS, shouldRetain: Bool) {
@@ -615,10 +620,10 @@ public struct Publish {
     }
     
     public let flags: Flags
-    public let packetID: UInt16
+    public let packetID: UInt16?
     public let message: Message
     
-    public init(flags: Flags, packetID: UInt16, message: Message) {
+    public init(flags: Flags, packetID: UInt16?, message: Message) {
         self.flags = flags
         self.packetID = packetID
         self.message = message
@@ -654,10 +659,9 @@ extension Publish: PacketEncodable {
     public var variableHeader: VariableHeader {
         var data = Payload()
         data.append(message.topic)
-        if flags.qos != .atMostOnce {
+        if flags.qos != .atMostOnce, let packetID = packetID {
             data.append(packetID)
         }
-        
         
         return VariableHeader(data: data)
     }
@@ -689,6 +693,12 @@ extension PublishAcknowledgement: PacketEncodable {
         
         return VariableHeader(data: data)
     }
+}
+
+public struct Disconnect { }
+
+extension Disconnect: PacketEncodable {
+    public var fixedHeader: ControlByte { return ControlByte(type: .disconnect) }
 }
 
 extension Collection where SubSequence == Self, Element: Equatable {

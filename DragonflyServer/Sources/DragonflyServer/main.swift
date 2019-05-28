@@ -2,6 +2,7 @@ import DragonflyCore
 import NIO
 import NIOExtras
 
+let packetHandler = PacketHandler()
 let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
 let bootstrap = ServerBootstrap(group: group)
     // Specify backlog and enable SO_REUSEADDR for the server itself
@@ -20,7 +21,7 @@ let bootstrap = ServerBootstrap(group: group)
         }.flatMap { _ in
             channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound2")
         }.flatMap { _ in
-            channel.pipeline.addHandler(PacketHandler(), name: "PacketHandler")
+            channel.pipeline.addHandler(packetHandler, name: "SharedPacketHandler")
         }.flatMap { _ in
             channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound1")
         }
