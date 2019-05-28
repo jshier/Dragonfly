@@ -18,13 +18,21 @@ final class PacketDecoder: ByteToMessageDecoder {
         // Need enough bytes for the fixed header and possible remaining length.
         guard buffer.readableBytes >= 2 else { return .needMoreData }
         
+        let saved = buffer
+        
         do {
             let (count, remainingLength) = try buffer.getRemainingLength(at: buffer.readerIndex + 1)
 
             guard buffer.readableBytes >= (1 + Int(count) + remainingLength) else { return .needMoreData }
+
             
             let fixedHeader = try FixedHeader(buffer: &buffer)
             let packet = try Packet(fixedHeader: fixedHeader, buffer: &buffer)
+//            let packet: Packet = try buffer.batchRead { inner in
+//                let fixedHeader = try FixedHeader(buffer: &inner)
+//                return try Packet(fixedHeader: fixedHeader, buffer: &inner)
+//            }
+            
             context.fireChannelRead(wrapInboundOut(packet))
             
             return .continue
@@ -32,6 +40,7 @@ final class PacketDecoder: ByteToMessageDecoder {
             if (error as? RemainingLengthError) == RemainingLengthError.incomplete {
                 return .needMoreData
             } else {
+                buffer = saved
                 throw error
             }
         }

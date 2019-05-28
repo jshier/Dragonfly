@@ -16,6 +16,6 @@ let package = Package(
             dependencies: ["NIO", "NIOFoundationCompat", "NIOExtras", "DragonflyCore"]),
         .testTarget(
             name: "DragonflyServerTests",
-            dependencies: ["DragonflyServer"]),
+            dependencies: ["DragonflyServer", "NIOTestUtils"]),
     ]
 )

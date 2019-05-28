@@ -13,12 +13,34 @@ extension ByteBuffer {
         case readFailed(fromBuffer: String, ofType: String)
     }
     
+//    mutating func batchRead(using closure: (_ buffer: inout ByteBuffer) throws -> Void) throws {
+//        let saved = self
+//        do {
+//            try closure(&self)
+//        } catch {
+//            self = saved
+//            throw error
+//        }
+//    }
+    
+    mutating func batchRead<T>(using closure: (_ buffer: inout ByteBuffer) throws -> T) rethrows -> T {
+        let saved = self
+        do {
+            return try closure(&self)
+        } catch {
+            self = saved
+            throw error
+        }
+    }
+    
     mutating func readEncodedString() throws -> String {
+        let saved = self
         guard let length: UInt16 = readInteger() else {
             throw Error.readFailed(fromBuffer: description, ofType: "UInt16")
         }
         
         guard let string = readString(length: Int(length)) else {
+            self = saved // Roll all the way back if the readString fails.
             throw Error.readFailed(fromBuffer: description, ofType: "String of length \(length)")
         }
         
