@@ -13,8 +13,13 @@ public enum Packet: Equatable {
     case connectAcknowledgement(ConnectAcknowledgement)
     case publish(Publish)
     case publishAcknowledgement(PublishAcknowledgement)
+    case publishReceived(PublishReceived)
+    case publishRelease(PublishRelease)
+    case publishComplete(PublishComplete)
     case subscribe(Subscribe)
     case subscribeAcknowledgement(SubscribeAcknowledgement)
+    case unsubscribe(Unsubscribe)
+    case unsubscribeAcknowledgement(UnsubscribeAcknowledgement)
     case ping(Ping)
     case pingResponse(PingResponse)
     case disconnect(Disconnect)
@@ -27,8 +32,13 @@ extension Packet {
         case let .connectAcknowledgement(packet): return packet
         case let .publish(packet): return packet
         case let .publishAcknowledgement(packet): return packet
+        case let .publishReceived(packet): return packet
+        case let .publishRelease(packet): return packet
+        case let .publishComplete(packet): return packet
         case let .subscribe(packet): return packet
         case let .subscribeAcknowledgement(packet): return packet
+        case let .unsubscribe(packet): return packet
+        case let .unsubscribeAcknowledgement(packet): return packet
         case let .ping(packet): return packet
         case let .pingResponse(packet): return packet
         case let .disconnect(packet): return packet
@@ -47,9 +57,14 @@ extension Packet {
         case .connectAcknowledgement: self = .connectAcknowledgement(try .init(fixedHeader: fixedHeader, buffer: &buffer))
         case .publish: self = .publish(try .init(fixedHeader: fixedHeader, buffer: &buffer))
         case .publishAcknowledgement: self = .publishAcknowledgement(try .init(fixedHeader: fixedHeader, buffer: &buffer))
+        case .publishReceived: self = .publishReceived(try .init(fixedHeader: fixedHeader, buffer: &buffer))
+        case .publishRelease: self = .publishRelease(try .init(fixedHeader: fixedHeader, buffer: &buffer))
+        case .publishComplete: self = .publishComplete(try .init(fixedHeader: fixedHeader, buffer: &buffer))
         case .subscribe: self = .subscribe(try .init(fixedHeader: fixedHeader, buffer: &buffer))
+        case .unsubscribe: self = .unsubscribe(try .init(fixedHeader: fixedHeader, buffer: &buffer))
         case .ping: self = .ping(.init())
         case .pingResponse: self = .pingResponse(.init())
+        case .disconnect: self = .disconnect(try .init(fixedHeader: fixedHeader, buffer: &buffer))
         default: throw Error.unsupportedPacket(type: fixedHeader.controlByte.type)
         }
     }
@@ -121,20 +136,7 @@ extension ConnectAcknowledgement {
     }
 }
 
-extension Subscribe {
-    init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
-        let packetID: UInt16 = try buffer.readInteger()
-        var allSubscriptions = try buffer.readSlice(length: Int(fixedHeader.remainingLength - 2)).get()
-        var subscriptions: [String: QoS] = [:]
-        while allSubscriptions.readableBytes > 0 {
-            let subscription = try allSubscriptions.readEncodedString()
-            let qos = try QoS(rawValue: try allSubscriptions.readInteger()).get()
-            subscriptions[subscription] = qos
-        }
-        
-        self = .init(packetID: packetID, topics: subscriptions)
-    }
-}
+
 
 extension Publish {
     init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
@@ -159,6 +161,58 @@ extension Publish {
 extension PublishAcknowledgement {
     init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
         self = .init(packetID: try buffer.readInteger())
+    }
+}
+
+extension PublishReceived {
+    init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
+        self = .init(packetID: try buffer.readInteger())
+    }
+}
+
+extension PublishRelease {
+    init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
+        self = .init(packetID: try buffer.readInteger())
+    }
+}
+
+extension PublishComplete {
+    init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
+        self = .init(packetID: try buffer.readInteger())
+    }
+}
+
+extension Subscribe {
+    init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
+        let packetID: UInt16 = try buffer.readInteger()
+        var allSubscriptions = try buffer.readSlice(length: Int(fixedHeader.remainingLength - 2)).get()
+        var subscriptions: [String: QoS] = [:]
+        while allSubscriptions.readableBytes > 0 {
+            let subscription = try allSubscriptions.readEncodedString()
+            let qos = try QoS(rawValue: try allSubscriptions.readInteger()).get()
+            subscriptions[subscription] = qos
+        }
+        
+        self = .init(packetID: packetID, topics: subscriptions)
+    }
+}
+
+extension Unsubscribe {
+    init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
+        let packetID: UInt16 = try buffer.readInteger()
+        var topicsBytes = try buffer.readSlice(length: Int(fixedHeader.remainingLength - 2)).get()
+        var topics: [String] = []
+        while topicsBytes.readableBytes > 0 {
+            topics.append(try topicsBytes.readEncodedString())
+        }
+        
+        self = .init(packetID: packetID, topics: topics)
+    }
+}
+
+extension Disconnect {
+    init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
+        self = .init()
     }
 }
 

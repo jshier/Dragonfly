@@ -30,6 +30,7 @@ public struct ControlByte: Equatable {
         func validateFlags(_ flags: UInt8) -> Bool {
             switch self {
             case .subscribe: return Bool(byte: flags, usingMask: 0b0010)
+            case .unsubscribe: return Bool(byte: flags, usingMask: 0b0010)
             default: return true
             }
         }
@@ -541,6 +542,53 @@ public struct Subscribe: PacketEncodable {
     }
 }
 
+public struct Unsubscribe {
+    public let packetID: UInt16
+    public let topics: [String]
+    
+    public init(packetID: UInt16, topics: [String]) {
+        self.packetID = packetID
+        self.topics = topics
+    }
+}
+
+extension Unsubscribe: PacketEncodable {
+    public var fixedHeader: ControlByte { return .init(type: .unsubscribe, flags: 0b0010) }
+    
+    public var variableHeader: VariableHeader {
+        var data = Payload()
+        data.append(packetID)
+        
+        return VariableHeader(data: data)
+    }
+    
+    public var payload: Payload {
+        var data = Payload()
+        topics.forEach { data.append($0) }
+        
+        return data
+    }
+}
+
+public struct UnsubscribeAcknowledgement {
+    public let packetID: UInt16
+    
+    public init(packetID: UInt16) {
+        self.packetID = packetID
+    }
+}
+
+extension UnsubscribeAcknowledgement: PacketEncodable {
+    public var fixedHeader: ControlByte { return .init(type: .unsubscribeAcknowledgement) }
+    
+    public var variableHeader: VariableHeader {
+        var data = Payload()
+        data.append(packetID)
+        
+        return VariableHeader(data: data)
+    }
+}
+
 public struct SubscribeAcknowledgement {
     public enum ReturnCode: UInt8 {
         case maxQoS0 = 0x00
@@ -695,10 +743,69 @@ extension PublishAcknowledgement: PacketEncodable {
     }
 }
 
-public struct Disconnect { }
+public struct Disconnect {
+    public init() { }
+}
 
 extension Disconnect: PacketEncodable {
     public var fixedHeader: ControlByte { return ControlByte(type: .disconnect) }
+}
+
+public struct PublishReceived {
+    public let packetID: UInt16
+    
+    public init(packetID: UInt16) {
+        self.packetID = packetID
+    }
+}
+
+extension PublishReceived: PacketEncodable {
+    public var fixedHeader: ControlByte { return .init(type: .publishReceived) }
+    
+    public var variableHeader: VariableHeader {
+        var data = Payload()
+        data.append(packetID)
+        
+        return VariableHeader(data: data)
+    }
+}
+
+public struct PublishRelease {
+    public let packetID: UInt16
+    
+    public init(packetID: UInt16) {
+        self.packetID = packetID
+    }
+}
+
+extension PublishRelease: PacketEncodable {
+    public var fixedHeader: ControlByte { return .init(type: .publishRelease) }
+    
+    public var variableHeader: VariableHeader {
+        var data = Payload()
+        data.append(packetID)
+        
+        return VariableHeader(data: data)
+    }
+}
+
+public struct PublishComplete {
+    public let packetID: UInt16
+    
+    public init(packetID: UInt16) {
+        self.packetID = packetID
+    }
+}
+
+extension PublishComplete: PacketEncodable {
+    public var fixedHeader: ControlByte { return .init(type: .publishComplete) }
+    
+    public var variableHeader: VariableHeader {
+        var data = Payload()
+        data.append(packetID)
+        
+        return VariableHeader(data: data)
+    }
 }
 
 extension Collection where SubSequence == Self, Element: Equatable {
@@ -851,3 +958,8 @@ extension SubscribeAcknowledgement: Equatable {}
 extension Ping: Equatable {}
 extension PingResponse: Equatable {}
 extension Disconnect: Equatable {}
+extension PublishReceived: Equatable {}
+extension PublishRelease: Equatable {}
+extension PublishComplete: Equatable {}
+extension Unsubscribe: Equatable {}
+extension UnsubscribeAcknowledgement: Equatable {}

@@ -61,7 +61,7 @@ extension ByteBuffer {
         var byte: UInt8 = 0
         var currentIndex = newReaderIndex
         repeat {
-            guard currentIndex != (readableBytes + 1) else { throw RemainingLengthError.incomplete }
+            guard currentIndex != ((readerIndex + readableBytes) + 1) else { throw RemainingLengthError.incomplete }
             
             guard multiplier <= (128 * 128 * 128) else { throw RemainingLengthError.malformed }
             

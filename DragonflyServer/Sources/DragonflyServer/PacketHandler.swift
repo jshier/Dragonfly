@@ -1,5 +1,5 @@
 //
-//  MQTTChannelHandler.swift
+//  PacketHandler.swift
 //  DragonflyServer
 //
 //  Created by Jon Shier on 5/23/19.
@@ -35,10 +35,20 @@ final class PacketHandler: ChannelInboundHandler {
             handlePublish(publish, in: context)
         case let .publishAcknowledgement(acknowledgement):
             handlePublishAcknowledgement(acknowledgement, in: context)
+        case let .publishReceived(received):
+            handlePublishReceived(received, in: context)
+        case let .publishRelease(release):
+            handlePublishRelease(release, in: context)
+        case let .publishComplete(complete):
+            handlePublishComplete(complete, in: context)
         case let .subscribe(subscribe):
             handleSubscribe(subscribe, in: context)
         case .subscribeAcknowledgement:
             handleUnsupportedPacket(description: ".subscribeAcknowledgement", in: context)
+        case let .unsubscribe(unsubscribe):
+            handleUnsubscribe(unsubscribe, in: context)
+        case .unsubscribeAcknowledgement:
+            handleUnsupportedPacket(description: ".unsubscribeAcknowledgement", in: context)
         case let .ping(ping):
             handlePing(ping, in: context)
         case .pingResponse:
@@ -60,7 +70,11 @@ final class PacketHandler: ChannelInboundHandler {
         // TODO: Store all relevant properties, not just clientID
         let channel = context.channel
         print("🐉 Writing to activeChannels for clientID: \(connect.clientID)")
-        protector.sync { self.clientIDsToChannels[connect.clientID] = channel; self.channelsToClientIDs[ObjectIdentifier(channel)] = connect.clientID }
+        protector.sync {
+            self.clientIDsToChannels[connect.clientID] = channel
+            self.channelsToClientIDs[ObjectIdentifier(channel)] = connect.clientID
+            precondition(self.clientIDsToChannels.count == self.channelsToClientIDs.count)
+        }
         let acknowledgement = ConnectAcknowledgement(response: .accepted, isSessionPresent: false)
         print("🐉 Sending ConnectAcknowledgement for clientID: \(connect.clientID)")
         context.writeAndFlush(wrapOutboundOut(.connectAcknowledgement(acknowledgement))).whenComplete { _ in
@@ -87,6 +101,17 @@ final class PacketHandler: ChannelInboundHandler {
         print("🐉 Received .publishAcknowledgement for packetID: \(acknowledgement.packetID).")
     }
     
+    func handlePublishReceived(_ received: PublishReceived, in context: ChannelHandlerContext) {
+        print("🐉 Received .publishReceived for packetID: \(received.packetID).")
+    }
+    
+    func handlePublishRelease(_ release: PublishRelease, in context: ChannelHandlerContext) {
+        print("🐉 Received .publishRelease for packetID: \(release.packetID).")
+    }
+    func handlePublishComplete(_ complete: PublishComplete, in context: ChannelHandlerContext) {
+        print("🐉 Received .publishComplete for packetID: \(complete.packetID).")
+    }
+    
     func handleSubscribe(_ subscribe: Subscribe, in context: ChannelHandlerContext) {
         let id = ObjectIdentifier(context.channel)
         let topics = subscribe.topics.keys
@@ -94,8 +119,8 @@ final class PacketHandler: ChannelInboundHandler {
         // TODO: Produce error if not found.
         guard let clientID = protector.sync(execute: { self.channelsToClientIDs[id] }) else { return }
         
-        for topic in topics {
-            protector.sync {
+        protector.sync {
+            for topic in topics {
                 var subscribers = self.subscriptions[topic, default: []]
                 
                 if !subscribers.contains(clientID) {
@@ -111,6 +136,32 @@ final class PacketHandler: ChannelInboundHandler {
         print("🐉 Sending SubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
         context.writeAndFlush(wrapOutboundOut(.subscribeAcknowledgement(acknowledgement))).whenComplete { _ in
             print("🐉 Sent SubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
+        }
+    }
+    
+    func handleUnsubscribe(_ unsubscribe: Unsubscribe, in context: ChannelHandlerContext) {
+        let id = ObjectIdentifier(context.channel)
+        let topics = unsubscribe.topics
+        
+        // TODO: Produce error if not found.
+        guard let clientID = protector.sync(execute: { self.channelsToClientIDs[id] }) else { return }
+        
+        protector.sync {
+            for topic in topics {
+                var subscribers = self.subscriptions[topic, default: []]
+                
+                if let index = subscribers.firstIndex(of: clientID) {
+                    subscribers.remove(at: index)
+                    self.subscriptions[topic] = subscribers
+                }
+            }
+        }
+        
+        let allTopics = topics.joined(separator: ", ")
+        let acknowledgement = UnsubscribeAcknowledgement(packetID: unsubscribe.packetID)
+        print("🐉 Sending UnsubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
+        context.writeAndFlush(wrapOutboundOut(.unsubscribeAcknowledgement(acknowledgement))).whenComplete { _ in
+            print("🐉 Sent UnsubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
         }
     }
     
@@ -130,7 +181,21 @@ final class PacketHandler: ChannelInboundHandler {
         let id = ObjectIdentifier(context.channel)
         print("🐉 Processing disconnection.")
         protector.sync {
-            self.channelsToClientIDs[id].map { self.clientIDsToChannels[$0] = nil }
+            precondition(self.channelsToClientIDs.count == self.clientIDsToChannels.count)
+            self.channelsToClientIDs[id].map { (clientID) in
+                self.clientIDsToChannels[clientID] = nil
+                
+                for (topic, var subscribers) in self.subscriptions {
+                    guard let index = subscribers.firstIndex(of: clientID) else { return }
+                    
+                    subscribers.remove(at: index)
+                    if subscribers.isEmpty {
+                        self.subscriptions.removeValue(forKey: topic)
+                    } else {
+                        self.subscriptions[topic] = subscribers
+                    }
+                }
+            }
             self.channelsToClientIDs[id] = nil
             precondition(self.channelsToClientIDs.count == self.clientIDsToChannels.count)
         }
