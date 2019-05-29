@@ -18,8 +18,10 @@ final class PacketHandler: ChannelInboundHandler {
     private let protector = DispatchQueue(label: "server.dragonfly.handler.protected")
     // All active subscription, mapping topic to all subscribed clientIDs.
     private var subscriptions: [String: [String]] = [:]
-    // All active connections, mapping the ObjectIdentifier of the channel to the clientID and channel.
-    private var activeChannels: [ObjectIdentifier: (clientID: String, channel: Channel)] = [:]
+    // clientID to Channel
+    private var clientIDsToChannels: [String: Channel] = [:]
+    // ObjectIdentifier(channel) to clientID
+    private var channelsToClientIDs: [ObjectIdentifier: String] = [:]
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let packet = unwrapInboundIn(data)
@@ -57,12 +59,11 @@ final class PacketHandler: ChannelInboundHandler {
     func handleConnect(_ connect: Connect, in context: ChannelHandlerContext) {
         // TODO: Store all relevant properties, not just clientID
         let channel = context.channel
-        let id = ObjectIdentifier(channel)
         print("🐉 Writing to activeChannels for clientID: \(connect.clientID)")
-        protector.sync { self.activeChannels[id] = (clientID: connect.clientID, channel: channel) }
+        protector.sync { self.clientIDsToChannels[connect.clientID] = channel; self.channelsToClientIDs[ObjectIdentifier(channel)] = connect.clientID }
         let acknowledgement = ConnectAcknowledgement(response: .accepted, isSessionPresent: false)
         print("🐉 Sending ConnectAcknowledgement for clientID: \(connect.clientID)")
-        context.writeAndFlush(self.wrapOutboundOut(.connectAcknowledgement(acknowledgement))).whenComplete { _ in
+        context.writeAndFlush(wrapOutboundOut(.connectAcknowledgement(acknowledgement))).whenComplete { _ in
             print("🐉 Sent ConnectAcknowledgement for clientID: \(connect.clientID)")
         }
     }
@@ -73,7 +74,7 @@ final class PacketHandler: ChannelInboundHandler {
         
         guard !subscribers.isEmpty else { return }
         
-        let channels = protector.sync { self.activeChannels.values.filter { subscribers.contains($0.clientID) }.map { $0.channel } }
+        let channels = protector.sync { subscribers.compactMap { self.clientIDsToChannels[$0] } }
         
         print("🐉 Writing publish to topic: \(publish.message.topic) to all subscribing channels.")
         channels.forEach { $0.writeAndFlush(wrapOutboundOut(.publish(publish))).whenComplete { _ in
@@ -91,9 +92,7 @@ final class PacketHandler: ChannelInboundHandler {
         let topics = subscribe.topics.keys
         
         // TODO: Produce error if not found.
-        guard let (clientID, originalChannel) = protector.sync(execute: { self.activeChannels[id] }) else { return }
-        
-        guard context.channel === originalChannel else { print("Channels not the same, weird."); return }
+        guard let clientID = protector.sync(execute: { self.channelsToClientIDs[id] }) else { return }
         
         for topic in topics {
             protector.sync {
@@ -130,7 +129,11 @@ final class PacketHandler: ChannelInboundHandler {
     func processDisconnection(in context: ChannelHandlerContext) {
         let id = ObjectIdentifier(context.channel)
         print("🐉 Processing disconnection.")
-        protector.sync { self.activeChannels[id] = nil }
+        protector.sync {
+            self.channelsToClientIDs[id].map { self.clientIDsToChannels[$0] = nil }
+            self.channelsToClientIDs[id] = nil
+            precondition(self.channelsToClientIDs.count == self.clientIDsToChannels.count)
+        }
     }
     
     func handleUnsupportedPacket(description: String, in context: ChannelHandlerContext) {

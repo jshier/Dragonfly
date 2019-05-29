@@ -1,8 +1,8 @@
 import NIOTestUtils
 import NIO
 import XCTest
-@testable import DragonflyServer
-import class Foundation.Bundle
+import DragonflyServer
+import DragonflyCore
 
 final class DragonflyServerTests: XCTestCase {
     func testPacketDecoder() throws {
@@ -10,14 +10,18 @@ final class DragonflyServerTests: XCTestCase {
         let channel = EmbeddedChannel()
         var pingInput = channel.allocator.buffer(capacity: 2)
         pingInput.writeBytes([0b11000000, 0b00000000])
-        let expectedInOuts = [(pingInput, Packet.ping(.init()))]
-        
+        let expectedInOuts = [(pingInput, [Packet.ping(.init())])]
+
         // When, Then
         XCTAssertNoThrow(try ByteToMessageDecoderVerifier.verifyDecoder(inputOutputPairs: expectedInOuts,
-                                                                        decoderFactory: { PacketDecoder() }), "Should be able to decode Ping")
+                                                                        decoderFactory: { PacketDecoder() }))
     }
-
-//    static var allTests = [
-//        ("testExample", testExample),
-//    ]
+    
+    func testExample() {
+        XCTAssertTrue(true)
+    }
+    
+    static var allTests = [
+        ("testExample", testExample),
+    ]
 }

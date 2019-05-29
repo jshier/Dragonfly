@@ -9,10 +9,12 @@ import DragonflyCore
 import Foundation
 import NIO
 
-final class PacketDecoder: ByteToMessageDecoder {
-    typealias InboundOut = Packet
+public final class PacketDecoder: ByteToMessageDecoder {
+    public typealias InboundOut = Packet
     
-    func decode(context: ChannelHandlerContext, buffer: inout ByteBuffer) throws -> DecodingState {
+    public init() {}
+    
+    public func decode(context: ChannelHandlerContext, buffer: inout ByteBuffer) throws -> DecodingState {
         print("PacketDecoder received decode(context:buffer:)")
         print("readableBytes: \(buffer.readableBytes)")
         // Need enough bytes for the fixed header and possible remaining length.
@@ -46,7 +48,7 @@ final class PacketDecoder: ByteToMessageDecoder {
         }
     }
     
-    func decodeLast(context: ChannelHandlerContext, buffer: inout ByteBuffer, seenEOF: Bool) throws -> DecodingState {
+    public func decodeLast(context: ChannelHandlerContext, buffer: inout ByteBuffer, seenEOF: Bool) throws -> DecodingState {
         print("PacketDecoder received decodeLast(context:buffer:seenEOF:\(seenEOF))")
         if buffer.readableBytes > 0 { print("Bytes available in decodeLast") }
         return .continue

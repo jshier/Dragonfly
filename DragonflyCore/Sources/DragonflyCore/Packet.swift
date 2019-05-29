@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct ControlByte {
+public struct ControlByte: Equatable {
     enum Error: Swift.Error { case invalidFlags }
     
     public enum PacketType: UInt8 {
@@ -410,15 +410,15 @@ extension Connect: PacketDecodable {
         
         let connectFlags = parsing.eat()
         
-        guard (connectFlags & 0b00000001) == 0 else { throw ParseError.error } // Reserved bit isn't 0, should disconnect.
+        guard (connectFlags & 0b0000_0001) == 0 else { throw ParseError.error } // Reserved bit isn't 0, should disconnect.
         
-        cleanSession = Bool((connectFlags & 0b00000010) >> 1)
-        storeWill = Bool((connectFlags & 0b00000100) >> 2)
+        cleanSession = Bool(byte: connectFlags, usingMask: 0b0000_0010)
+        storeWill = Bool(byte: connectFlags, usingMask: 0b00000100)
         willQoS = (storeWill) ? WillQoS(rawValue: ((connectFlags & 0b00011000) >> 3)) ?? .zero : .zero // How to handle 3?
-        retainWill = (storeWill) ? Bool((connectFlags & 0b00100000) >> 5) : false
+        retainWill = (storeWill) ? Bool(byte: connectFlags, usingMask: 0b00100000) : false
         
-        let hasUsername = Bool((connectFlags & 0b10000000) >> 7)
-        let hasPassword = Bool((connectFlags & 0b01000000) >> 6)
+        let hasUsername = Bool(byte: connectFlags, usingMask: 0b10000000)
+        let hasPassword = Bool(byte: connectFlags, usingMask: 0b01000000)
         
         keepAlive = UInt16(parsing.eat(2))
         
@@ -474,7 +474,7 @@ public struct ConnectAcknowledgement {
     init?(data: Data) {
         guard data.count == 2, let first = data.first, let second = data.last, let response = Response(rawValue: second) else { return nil }
         
-        isSessionPresent = (first & 0x01) == 0x01
+        isSessionPresent = Bool(first)
         self.response = response
     }
 }
@@ -505,7 +505,7 @@ public struct PingResponse: PacketEncodable {
     public init() {}
 }
 
-public enum QoS: UInt8 {
+public enum QoS: UInt8, Equatable {
     case atMostOnce = 0x00
     case atLeastOnce = 0x01
     case exactlyOnce = 0x02
@@ -585,7 +585,7 @@ extension SubscribeAcknowledgement: PacketEncodable {
 }
 
 public struct Publish {
-    public struct Flags {
+    public struct Flags: Equatable {
         public let firstAttempt: Bool
         public let qos: QoS
         public let shouldRetain: Bool
@@ -609,7 +609,7 @@ public struct Publish {
 //        }
     }
     
-    public struct Message {
+    public struct Message: Equatable {
         public let topic: String
         public let payload: Data
         
@@ -840,3 +840,14 @@ public enum RemainingLengthError: Error {
     case malformed
     case incomplete
 }
+
+
+extension Connect: Equatable {}
+extension ConnectAcknowledgement: Equatable {}
+extension Publish: Equatable {}
+extension PublishAcknowledgement: Equatable {}
+extension Subscribe: Equatable {}
+extension SubscribeAcknowledgement: Equatable {}
+extension Ping: Equatable {}
+extension PingResponse: Equatable {}
+extension Disconnect: Equatable {}

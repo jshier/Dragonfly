@@ -8,7 +8,7 @@
 import DragonflyCore
 import NIO
 
-enum Packet {
+public enum Packet: Equatable {
     case connect(Connect)
     case connectAcknowledgement(ConnectAcknowledgement)
     case publish(Publish)
@@ -114,7 +114,7 @@ extension Connect {
 
 extension ConnectAcknowledgement {
     init(fixedHeader: FixedHeader, buffer: inout ByteBuffer) throws {
-        let isSessionPresent = Bool(try buffer.readInteger(as: UInt8.self))
+        let isSessionPresent = Bool(try buffer.readInteger())
         let response = try Response(rawValue: try buffer.readInteger()).get()
         
         self = .init(response: response, isSessionPresent: isSessionPresent)
