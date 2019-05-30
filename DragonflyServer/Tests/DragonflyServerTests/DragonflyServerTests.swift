@@ -29,6 +29,18 @@ final class DragonflyServerTests: XCTestCase {
                                                                         decoderFactory: { PacketDecoder() }))
     }
     
+    func testPingThenDisconnectDecoding() {
+        // Given
+        let channel = EmbeddedChannel()
+        var disconnectInput = channel.allocator.buffer(capacity: 4)
+        disconnectInput.writeBytes([0b11000000, 0b00000000, 0b11100000, 0b00000000])
+        let expectedInOuts = [(disconnectInput, [Packet.ping(.init()), Packet.disconnect(.init())])]
+        
+        // When, Then
+        XCTAssertNoThrow(try ByteToMessageDecoderVerifier.verifyDecoder(inputOutputPairs: expectedInOuts,
+                                                                        decoderFactory: { PacketDecoder() }))
+    }
+    
     func testConnectDecoding() {
         // Given
         let channel = EmbeddedChannel()

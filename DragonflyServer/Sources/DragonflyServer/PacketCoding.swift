@@ -43,8 +43,13 @@ final class PacketDecoder: ByteToMessageDecoder {
     
     func decodeLast(context: ChannelHandlerContext, buffer: inout ByteBuffer, seenEOF: Bool) throws -> DecodingState {
         print("PacketDecoder received decodeLast(context:buffer:seenEOF:\(seenEOF))")
-        if buffer.readableBytes > 0 { print("Bytes available in decodeLast") }
-        return .continue
+        
+        if buffer.readableBytes > 0 {
+            print("Bytes available in decodeLast")
+            return try decode(context: context, buffer: &buffer)
+        } else {
+            return .continue
+        }
     }
 }
 
