@@ -12,8 +12,13 @@ import NIO
 import NIOFoundationCompat
 
 final class PacketHandler: ChannelInboundHandler {
+    enum Outbound {
+        case packet(Packet)
+        case preencoded(ByteBuffer)
+    }
+    
     typealias InboundIn = Packet
-    typealias OutboundOut = Packet
+    typealias OutboundOut = Outbound
     
     private let protector = DispatchQueue(label: "server.dragonfly.handler.protected")
     // All active subscription, mapping topic to all subscribed clientIDs.
@@ -77,7 +82,7 @@ final class PacketHandler: ChannelInboundHandler {
         }
         let acknowledgement = ConnectAcknowledgement(response: .accepted, isSessionPresent: false)
         print("🐉 Sending ConnectAcknowledgement for clientID: \(connect.clientID)")
-        context.writeAndFlush(wrapOutboundOut(.connectAcknowledgement(acknowledgement))).whenComplete { _ in
+        context.writeAndFlush(wrapOutbound(.connectAcknowledgement(acknowledgement))).whenComplete { _ in
             print("🐉 Sent ConnectAcknowledgement for clientID: \(connect.clientID)")
         }
     }
@@ -91,7 +96,10 @@ final class PacketHandler: ChannelInboundHandler {
         let channels = protector.sync { subscribers.compactMap { self.clientIDsToChannels[$0] } }
         
         print("🐉 Writing publish to topic: \(publish.message.topic) to all subscribing channels.")
-        channels.forEach { $0.writeAndFlush(wrapOutboundOut(.publish(publish))).whenComplete { _ in
+        let data = publish.packet.encoded
+        var buffer = context.channel.allocator.buffer(capacity: data.count)
+        buffer.writeBytes(data)
+        channels.forEach { $0.writeAndFlush(wrapOutbound(buffer)).whenComplete { _ in
                 print("🐉 Wrote publish to topic: \(publish.message.topic).")
             }
         }
@@ -134,7 +142,7 @@ final class PacketHandler: ChannelInboundHandler {
         let acknowledgement = SubscribeAcknowledgement(packetID: subscribe.packetID, returnCodes: returnCodes)
         let allTopics = topics.joined(separator: ", ")
         print("🐉 Sending SubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
-        context.writeAndFlush(wrapOutboundOut(.subscribeAcknowledgement(acknowledgement))).whenComplete { _ in
+        context.writeAndFlush(wrapOutbound(.subscribeAcknowledgement(acknowledgement))).whenComplete { _ in
             print("🐉 Sent SubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
         }
     }
@@ -160,13 +168,13 @@ final class PacketHandler: ChannelInboundHandler {
         let allTopics = topics.joined(separator: ", ")
         let acknowledgement = UnsubscribeAcknowledgement(packetID: unsubscribe.packetID)
         print("🐉 Sending UnsubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
-        context.writeAndFlush(wrapOutboundOut(.unsubscribeAcknowledgement(acknowledgement))).whenComplete { _ in
+        context.writeAndFlush(wrapOutbound(.unsubscribeAcknowledgement(acknowledgement))).whenComplete { _ in
             print("🐉 Sent UnsubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
         }
     }
     
     func handlePing(_ ping: Ping, in context: ChannelHandlerContext) {
-        context.writeAndFlush(wrapOutboundOut(.pingResponse(.init()))).whenComplete { _ in
+        context.writeAndFlush(wrapOutbound(.pingResponse(.init()))).whenComplete { _ in
             print("🐉 Wrote PingResponse.")
         }
     }
@@ -204,5 +212,13 @@ final class PacketHandler: ChannelInboundHandler {
     func handleUnsupportedPacket(description: String, in context: ChannelHandlerContext) {
         print("🐉 Received \(description), but server should never receive it, closing connection.")
         context.close(promise: nil)
+    }
+    
+    private func wrapOutbound(_ packet: Packet) -> NIOAny {
+        return wrapOutboundOut(.packet(packet))
+    }
+    
+    private func wrapOutbound(_ buffer: ByteBuffer) -> NIOAny {
+        return wrapOutboundOut(.preencoded(buffer))
     }
 }

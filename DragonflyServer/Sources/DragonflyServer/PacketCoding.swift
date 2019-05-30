@@ -54,9 +54,12 @@ final class PacketDecoder: ByteToMessageDecoder {
 }
 
 final class PacketEncoder: MessageToByteEncoder {
-    typealias OutboundIn = Packet
+    typealias OutboundIn = PacketHandler.Outbound
     
-    func encode(data: Packet, out: inout ByteBuffer) throws {
-        out.writeBytes(data.encodable.packet.encoded)
+    func encode(data: PacketHandler.Outbound, out: inout ByteBuffer) throws {
+        switch data {
+        case let .packet(packet): out.writeBytes(packet.encodable.packet.encoded)
+        case var .preencoded(buffer): out.writeBuffer(&buffer)
+        }
     }
 }
