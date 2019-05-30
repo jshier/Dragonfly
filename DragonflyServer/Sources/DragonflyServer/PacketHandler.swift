@@ -10,6 +10,7 @@ import DragonflyCore
 import Foundation
 import NIO
 import NIOFoundationCompat
+import NIOConcurrencyHelpers
 
 final class PacketHandler: ChannelInboundHandler {
     enum Outbound {
@@ -20,7 +21,7 @@ final class PacketHandler: ChannelInboundHandler {
     typealias InboundIn = Packet
     typealias OutboundOut = Outbound
     
-    private let protector = DispatchQueue(label: "server.dragonfly.handler.protected")
+    private let protector = Lock()
     // All active subscription, mapping topic to all subscribed clientIDs.
     private var subscriptions: [String: [String]] = [:]
     // clientID to Channel
@@ -64,7 +65,7 @@ final class PacketHandler: ChannelInboundHandler {
     }
     
     func channelInactive(context: ChannelHandlerContext) {
-        print("🐉 Channel inactive.")
+        // print("🐉 Channel inactive.")
         processDisconnection(in: context)
         context.fireChannelInactive()
     }
@@ -74,50 +75,50 @@ final class PacketHandler: ChannelInboundHandler {
     func handleConnect(_ connect: Connect, in context: ChannelHandlerContext) {
         // TODO: Store all relevant properties, not just clientID
         let channel = context.channel
-        print("🐉 Writing to activeChannels for clientID: \(connect.clientID)")
-        protector.sync {
+        // print("🐉 Writing to activeChannels for clientID: \(connect.clientID)")
+        protector.withLock {
             self.clientIDsToChannels[connect.clientID] = channel
             self.channelsToClientIDs[ObjectIdentifier(channel)] = connect.clientID
             precondition(self.clientIDsToChannels.count == self.channelsToClientIDs.count)
         }
         let acknowledgement = ConnectAcknowledgement(response: .accepted, isSessionPresent: false)
-        print("🐉 Sending ConnectAcknowledgement for clientID: \(connect.clientID)")
+        // print("🐉 Sending ConnectAcknowledgement for clientID: \(connect.clientID)")
         context.writeAndFlush(wrapOutbound(.connectAcknowledgement(acknowledgement))).whenComplete { _ in
-            print("🐉 Sent ConnectAcknowledgement for clientID: \(connect.clientID)")
+            // print("🐉 Sent ConnectAcknowledgement for clientID: \(connect.clientID)")
         }
     }
     
     func handlePublish(_ publish: Publish, in context: ChannelHandlerContext) {
-        print("🐉 Received .publish for topic: \(publish.message.topic).")
-        let subscribers = protector.sync { self.subscriptions[publish.message.topic, default: []] }
+        // print("🐉 Received .publish for topic: \(publish.message.topic).")
+        let subscribers = protector.withLock { self.subscriptions[publish.message.topic, default: []] }
         
         guard !subscribers.isEmpty else { return }
         
-        let channels = protector.sync { subscribers.compactMap { self.clientIDsToChannels[$0] } }
+        let channels = protector.withLock { subscribers.compactMap { self.clientIDsToChannels[$0] } }
         
-        print("🐉 Writing publish to topic: \(publish.message.topic) to all subscribing channels.")
+        // print("🐉 Writing publish to topic: \(publish.message.topic) to all subscribing channels.")
         let data = publish.packet.encoded
         var buffer = context.channel.allocator.buffer(capacity: data.count)
         buffer.writeBytes(data)
         channels.forEach { $0.writeAndFlush(wrapOutbound(buffer)).whenComplete { _ in
-                print("🐉 Wrote publish to topic: \(publish.message.topic).")
+                // print("🐉 Wrote publish to topic: \(publish.message.topic).")
             }
         }
     }
     
     func handlePublishAcknowledgement(_ acknowledgement: PublishAcknowledgement, in context: ChannelHandlerContext) {
-        print("🐉 Received .publishAcknowledgement for packetID: \(acknowledgement.packetID).")
+        // print("🐉 Received .publishAcknowledgement for packetID: \(acknowledgement.packetID).")
     }
     
     func handlePublishReceived(_ received: PublishReceived, in context: ChannelHandlerContext) {
-        print("🐉 Received .publishReceived for packetID: \(received.packetID).")
+        // print("🐉 Received .publishReceived for packetID: \(received.packetID).")
     }
     
     func handlePublishRelease(_ release: PublishRelease, in context: ChannelHandlerContext) {
-        print("🐉 Received .publishRelease for packetID: \(release.packetID).")
+        // print("🐉 Received .publishRelease for packetID: \(release.packetID).")
     }
     func handlePublishComplete(_ complete: PublishComplete, in context: ChannelHandlerContext) {
-        print("🐉 Received .publishComplete for packetID: \(complete.packetID).")
+        // print("🐉 Received .publishComplete for packetID: \(complete.packetID).")
     }
     
     func handleSubscribe(_ subscribe: Subscribe, in context: ChannelHandlerContext) {
@@ -125,9 +126,9 @@ final class PacketHandler: ChannelInboundHandler {
         let topics = subscribe.topics.keys
         
         // TODO: Produce error if not found.
-        guard let clientID = protector.sync(execute: { self.channelsToClientIDs[id] }) else { return }
+        guard let clientID = protector.withLock({ self.channelsToClientIDs[id] }) else { return }
         
-        protector.sync {
+        protector.withLockVoid {
             for topic in topics {
                 var subscribers = self.subscriptions[topic, default: []]
                 
@@ -140,10 +141,10 @@ final class PacketHandler: ChannelInboundHandler {
         
         let returnCodes = topics.map { _ in SubscribeAcknowledgement.ReturnCode.maxQoS0 }
         let acknowledgement = SubscribeAcknowledgement(packetID: subscribe.packetID, returnCodes: returnCodes)
-        let allTopics = topics.joined(separator: ", ")
-        print("🐉 Sending SubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
+//        let allTopics = topics.joined(separator: ", ")
+        // // print("🐉 Sending SubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
         context.writeAndFlush(wrapOutbound(.subscribeAcknowledgement(acknowledgement))).whenComplete { _ in
-            print("🐉 Sent SubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
+            // print("🐉 Sent SubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
         }
     }
     
@@ -152,9 +153,9 @@ final class PacketHandler: ChannelInboundHandler {
         let topics = unsubscribe.topics
         
         // TODO: Produce error if not found.
-        guard let clientID = protector.sync(execute: { self.channelsToClientIDs[id] }) else { return }
+        guard let clientID = protector.withLock({ self.channelsToClientIDs[id] }) else { return }
         
-        protector.sync {
+        protector.withLockVoid {
             for topic in topics {
                 var subscribers = self.subscriptions[topic, default: []]
                 
@@ -165,30 +166,30 @@ final class PacketHandler: ChannelInboundHandler {
             }
         }
         
-        let allTopics = topics.joined(separator: ", ")
+//        let allTopics = topics.joined(separator: ", ")
         let acknowledgement = UnsubscribeAcknowledgement(packetID: unsubscribe.packetID)
-        print("🐉 Sending UnsubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
+        // print("🐉 Sending UnsubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
         context.writeAndFlush(wrapOutbound(.unsubscribeAcknowledgement(acknowledgement))).whenComplete { _ in
-            print("🐉 Sent UnsubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
+            // print("🐉 Sent UnsubscribeAcknowledgement for clientID: \(clientID) to topics: \(allTopics).")
         }
     }
     
     func handlePing(_ ping: Ping, in context: ChannelHandlerContext) {
         context.writeAndFlush(wrapOutbound(.pingResponse(.init()))).whenComplete { _ in
-            print("🐉 Wrote PingResponse.")
+            // print("🐉 Wrote PingResponse.")
         }
     }
     
     func handleDisconnect(_ disconnect: Disconnect, in context: ChannelHandlerContext) {
-        print("🐉 Received .disconnect, closing connection.")
+        // print("🐉 Received .disconnect, closing connection.")
         processDisconnection(in: context)
         context.close(promise: nil)
     }
     
     func processDisconnection(in context: ChannelHandlerContext) {
         let id = ObjectIdentifier(context.channel)
-        print("🐉 Processing disconnection.")
-        protector.sync {
+        // print("🐉 Processing disconnection.")
+        protector.withLockVoid {
             precondition(self.channelsToClientIDs.count == self.clientIDsToChannels.count)
             self.channelsToClientIDs[id].map { (clientID) in
                 self.clientIDsToChannels[clientID] = nil
@@ -210,7 +211,7 @@ final class PacketHandler: ChannelInboundHandler {
     }
     
     func handleUnsupportedPacket(description: String, in context: ChannelHandlerContext) {
-        print("🐉 Received \(description), but server should never receive it, closing connection.")
+        // print("🐉 Received \(description), but server should never receive it, closing connection.")
         context.close(promise: nil)
     }
     

@@ -12,22 +12,28 @@ public final class DragonflyServer {
         .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
         // Set the handlers that are applied to the accepted Channels
         .childChannelInitializer { channel in
-            channel.pipeline.addHandler(DebugInboundEventsHandler(), name: "DebugInbound1").flatMap { _ in
-                channel.pipeline.addHandler(ByteToMessageHandler(PacketDecoder()), name: "PacketDecoder")
-                }.flatMap { _ in
-                    channel.pipeline.addHandler(DebugInboundEventsHandler(), name: "DebugInbound2")
-                }.flatMap { _ in
-                    channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound3")
-                }.flatMap { _ in
-                    channel.pipeline.addHandler(MessageToByteHandler(PacketEncoder()), name: "PacketEncoder")
-                }.flatMap { _ in
-                    channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound2")
-                }.flatMap { _ in
-                    channel.pipeline.addHandler(DragonflyServer.packetHandler, name: "SharedPacketHandler")
-                }.flatMap { _ in
-                    channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound1")
+            channel.pipeline.addHandler(ByteToMessageHandler(PacketDecoder()), name: "PacketDecoder").flatMap { _ in
+                channel.pipeline.addHandler(MessageToByteHandler(PacketEncoder()), name: "PacketEncoder")
+            }.flatMap { _ in
+                channel.pipeline.addHandler(DragonflyServer.packetHandler, name: "SharedPacketHandler")
             }
         }
+//            channel.pipeline.addHandler(DebugInboundEventsHandler(), name: "DebugInbound1").flatMap { _ in
+//                channel.pipeline.addHandler(ByteToMessageHandler(PacketDecoder()), name: "PacketDecoder")
+//                }.flatMap { _ in
+//                    channel.pipeline.addHandler(DebugInboundEventsHandler(), name: "DebugInbound2")
+//                }.flatMap { _ in
+//                    channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound3")
+//                }.flatMap { _ in
+//                    channel.pipeline.addHandler(MessageToByteHandler(PacketEncoder()), name: "PacketEncoder")
+//                }.flatMap { _ in
+//                    channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound2")
+//                }.flatMap { _ in
+//                    channel.pipeline.addHandler(DragonflyServer.packetHandler, name: "SharedPacketHandler")
+//                }.flatMap { _ in
+//                    channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound1")
+//                }
+//            }
         // Enable TCP_NODELAY and SO_REUSEADDR for the accepted Channels
         .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
         .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
@@ -39,7 +45,7 @@ public final class DragonflyServer {
     public static func run() {
         defer { try! group.syncShutdownGracefully() }
         
-        let defaultHost = "::1"
+        let defaultHost = "127.0.0.1"
         let defaultPort = 9999
         let channel = try! bootstrap.bind(host: defaultHost, port: defaultPort).wait()
         

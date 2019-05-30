@@ -13,8 +13,8 @@ final class PacketDecoder: ByteToMessageDecoder {
     typealias InboundOut = Packet
     
     func decode(context: ChannelHandlerContext, buffer: inout ByteBuffer) throws -> DecodingState {
-        print("PacketDecoder received decode(context:buffer:)")
-        print("readableBytes: \(buffer.readableBytes)")
+        //print("PacketDecoder received decode(context:buffer:)")
+        //print("readableBytes: \(buffer.readableBytes)")
         // Need enough bytes for the fixed header and possible remaining length.
         guard buffer.readableBytes >= 2 else { return .needMoreData }
         
@@ -42,10 +42,10 @@ final class PacketDecoder: ByteToMessageDecoder {
     }
     
     func decodeLast(context: ChannelHandlerContext, buffer: inout ByteBuffer, seenEOF: Bool) throws -> DecodingState {
-        print("PacketDecoder received decodeLast(context:buffer:seenEOF:\(seenEOF))")
+       // print("PacketDecoder received decodeLast(context:buffer:seenEOF:\(seenEOF))")
         
         if buffer.readableBytes > 0 {
-            print("Bytes available in decodeLast")
+            //print("Bytes available in decodeLast")
             return try decode(context: context, buffer: &buffer)
         } else {
             return .continue
