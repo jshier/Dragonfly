@@ -59,7 +59,7 @@ final class PacketEncoder: MessageToByteEncoder {
     func encode(data: PacketHandler.Outbound, out: inout ByteBuffer) throws {
         switch data {
         case let .packet(packet): out.writeBytes(packet.encodable.packet.encoded)
-        case var .preencoded(buffer): out.writeBuffer(&buffer)
+        case let .preencoded(buffer): out = buffer
         }
     }
 }
