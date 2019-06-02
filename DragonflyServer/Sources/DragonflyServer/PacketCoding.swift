@@ -13,8 +13,9 @@ final class PacketDecoder: ByteToMessageDecoder {
     typealias InboundOut = Packet
     
     func decode(context: ChannelHandlerContext, buffer: inout ByteBuffer) throws -> DecodingState {
-        //print("PacketDecoder received decode(context:buffer:)")
-        //print("readableBytes: \(buffer.readableBytes)")
+        Logger.log("PacketDecoder received decode(context:buffer:)")
+        Logger.log("readableBytes: \(buffer.readableBytes)")
+        
         // Need enough bytes for the fixed header and possible remaining length.
         guard buffer.readableBytes >= 2 else { return .needMoreData }
         
@@ -42,10 +43,10 @@ final class PacketDecoder: ByteToMessageDecoder {
     }
     
     func decodeLast(context: ChannelHandlerContext, buffer: inout ByteBuffer, seenEOF: Bool) throws -> DecodingState {
-       // print("PacketDecoder received decodeLast(context:buffer:seenEOF:\(seenEOF))")
+        Logger.log("PacketDecoder received decodeLast(context:buffer:seenEOF:\(seenEOF))")
         
         if buffer.readableBytes > 0 {
-            //print("Bytes available in decodeLast")
+            Logger.log("Bytes available in decodeLast")
             return try decode(context: context, buffer: &buffer)
         } else {
             return .continue
@@ -57,6 +58,8 @@ final class PacketEncoder: MessageToByteEncoder {
     typealias OutboundIn = PacketHandler.Outbound
     
     func encode(data: PacketHandler.Outbound, out: inout ByteBuffer) throws {
+        Logger.log("PacketEncoder received encode(data:out:)")
+        
         switch data {
         case let .packet(packet): out.writeBytes(packet.encodable.packet.encoded)
         case let .preencoded(buffer): out = buffer

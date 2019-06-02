@@ -3,59 +3,68 @@ import NIO
 import NIOExtras
 
 public final class DragonflyServer {
-    static let packetHandler = PacketHandler()
-    static let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-    static var bootstrap =  {
-        ServerBootstrap(group: group)
-        // Specify backlog and enable SO_REUSEADDR for the server itself
-        .serverChannelOption(ChannelOptions.backlog, value: 256)
-        .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
-        // Set the handlers that are applied to the accepted Channels
-        .childChannelInitializer { channel in
-            channel.pipeline.addHandler(ByteToMessageHandler(PacketDecoder()), name: "PacketDecoder").flatMap { _ in
-                channel.pipeline.addHandler(MessageToByteHandler(PacketEncoder()), name: "PacketEncoder")
-            }.flatMap { _ in
-                channel.pipeline.addHandler(DragonflyServer.packetHandler, name: "SharedPacketHandler")
-            }
-        }
-//            channel.pipeline.addHandler(DebugInboundEventsHandler(), name: "DebugInbound1").flatMap { _ in
-//                channel.pipeline.addHandler(ByteToMessageHandler(PacketDecoder()), name: "PacketDecoder")
-//                }.flatMap { _ in
-//                    channel.pipeline.addHandler(DebugInboundEventsHandler(), name: "DebugInbound2")
-//                }.flatMap { _ in
-//                    channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound3")
-//                }.flatMap { _ in
-//                    channel.pipeline.addHandler(MessageToByteHandler(PacketEncoder()), name: "PacketEncoder")
-//                }.flatMap { _ in
-//                    channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound2")
-//                }.flatMap { _ in
-//                    channel.pipeline.addHandler(DragonflyServer.packetHandler, name: "SharedPacketHandler")
-//                }.flatMap { _ in
-//                    channel.pipeline.addHandler(DebugOutboundEventsHandler(), name: "DebugOutbound1")
-//                }
-//            }
-        // Enable TCP_NODELAY and SO_REUSEADDR for the accepted Channels
-        .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
-        .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
-        .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
-        .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
-    }()
-    
-    
-    public static func run() {
+    public static func run(host: String = "127.0.0.1", port: Int = 9999, enableLogging: Bool = true) {
+        Logger.isEnabled = enableLogging
+        
+        print("🐉 Logging enabled: \(enableLogging)")
+        
+        let (group, bootstrap) = bootstrapServer(enableLogging: enableLogging)
+        
         defer { try! group.syncShutdownGracefully() }
         
-        let defaultHost = "127.0.0.1"
-        let defaultPort = 9999
-        let channel = try! bootstrap.bind(host: defaultHost, port: defaultPort).wait()
+        let channel = try! bootstrap.bind(host: host, port: port).wait()
         
         guard let localAddress = channel.localAddress else {
             fatalError("Address was unable to bind. Please check that the socket was not closed or that the address family was understood.")
         }
-        print("Server started and listening on \(localAddress)")
+        
+        print("🐉 Server started and listening on \(localAddress)")
         
         try! channel.closeFuture.wait()
         
-        print("DragonflyServer closed")
+        print("🐉 DragonflyServer closed.")
+    }
+    
+    static func bootstrapServer(enableLogging: Bool) -> (group: MultiThreadedEventLoopGroup, bootstrap: ServerBootstrap) {
+        let sharedPacketHandler = PacketHandler()
+        let group = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        let bootstrap = ServerBootstrap(group: group)
+            .serverChannelOption(ChannelOptions.backlog, value: 256)
+            .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
+            .childChannelInitializer { channel in
+                creatHandlers(for: channel, packetHandler: sharedPacketHandler, enableLogging: enableLogging)
+            }
+            .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
+            .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
+            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
+            .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
+        
+        return (group: group, bootstrap: bootstrap)
+    }
+    
+    static func creatHandlers(for channel: Channel, packetHandler: PacketHandler, enableLogging: Bool) -> EventLoopFuture<Void> {
+        var handlersNames: [(handler: ChannelHandler, name: String)]
+        if enableLogging {
+            handlersNames = [(handler: DebugInboundEventsHandler(), name: "InboundBytes"),
+                             (handler: DebugOutboundEventsHandler(), name: "OutboundBytes"),
+                             (handler: ByteToMessageHandler(PacketDecoder()), name: "PacketDecoder"),
+                             (handler: DebugInboundEventsHandler(), name: "InboundPackets"),
+                             (handler: MessageToByteHandler(PacketEncoder()), name: "PacketEncoder"),
+                             (handler: DebugOutboundEventsHandler(), name: "OutboundPackets"),
+                             (handler: packetHandler, name: "SharedPacketHandler"),
+                             (handler: DebugOutboundEventsHandler(), name: "ChannelOutbound")]
+        } else {
+            handlersNames = [(handler: ByteToMessageHandler(PacketDecoder()), name: "PacketDecoder"),
+                             (handler: MessageToByteHandler(PacketEncoder()), name: "PacketEncoder"),
+                             (handler: packetHandler, name: "SharedPacketHandler")]
+        }
+        
+        let firstHandlerName = handlersNames.removeFirst()
+        var future = channel.pipeline.addHandler(firstHandlerName.handler, name: firstHandlerName.name)
+        for handlerName in handlersNames {
+            future = future.flatMap { channel.pipeline.addHandler(handlerName.handler, name: handlerName.name)}
+        }
+        
+        return future
     }
 }

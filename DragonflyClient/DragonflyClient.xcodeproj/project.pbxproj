@@ -196,8 +196,8 @@
          isa = "PBXGroup";
          children = (
             "DragonflyClient::DragonflyClientTests::Product",
-            "DragonflyCore::DragonflyCore::Product",
-            "DragonflyClient::DragonflyClient::Product"
+            "DragonflyClient::DragonflyClient::Product",
+            "DragonflyCore::DragonflyCore::Product"
          );
          name = "Products";
          path = "";
@@ -394,7 +394,7 @@
                "-target",
                "x86_64-apple-macosx10.10",
                "-sdk",
-               "/Applications/Xcode10.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
+               "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
             );
             SWIFT_VERSION = "5.0";
          };
@@ -412,7 +412,7 @@
                "-target",
                "x86_64-apple-macosx10.10",
                "-sdk",
-               "/Applications/Xcode10.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
+               "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
             );
             SWIFT_VERSION = "5.0";
          };
@@ -761,7 +761,7 @@
                "-target",
                "x86_64-apple-macosx10.10",
                "-sdk",
-               "/Applications/Xcode10.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
+               "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
             );
             SWIFT_VERSION = "5.0";
          };
@@ -779,7 +779,7 @@
                "-target",
                "x86_64-apple-macosx10.10",
                "-sdk",
-               "/Applications/Xcode10.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
+               "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"
             );
             SWIFT_VERSION = "5.0";
          };
