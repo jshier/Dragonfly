@@ -8,7 +8,7 @@
 import DragonflyCore
 import NIO
 
-public enum Packet: Equatable {
+enum Packet: Equatable {
     case connect(Connect)
     case connectAcknowledgement(ConnectAcknowledgement)
     case publish(Publish)

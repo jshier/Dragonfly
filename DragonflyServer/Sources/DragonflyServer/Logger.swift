@@ -9,9 +9,9 @@ enum Logger {
     static var isEnabled = true
     
     
-    static func log(_ string: String) {
+    static func log(_ string: @autoclosure () -> String) {
         guard isEnabled else { return }
         
-        print("🐉 \(string)")
+        print("🐉 \(string())")
     }
 }

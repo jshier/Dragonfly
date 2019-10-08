@@ -73,7 +73,6 @@ final class PacketHandler: ChannelInboundHandler {
     // MARK: - Packet Handling
     
     func handleConnect(_ connect: Connect, in context: ChannelHandlerContext) {
-        // TODO: Store all relevant properties, not just clientID
         let channel = context.channel
         Logger.log("Writing to activeChannels for clientID: \(connect.clientID)")
         protector.withLock {

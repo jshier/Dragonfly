@@ -32,7 +32,7 @@ public final class DragonflyServer {
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
             .childChannelInitializer { channel in
-                creatHandlers(for: channel, packetHandler: sharedPacketHandler, enableLogging: enableLogging)
+                createHandlers(for: channel, packetHandler: sharedPacketHandler, enableLogging: enableLogging)
             }
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
@@ -42,7 +42,7 @@ public final class DragonflyServer {
         return (group: group, bootstrap: bootstrap)
     }
     
-    static func creatHandlers(for channel: Channel, packetHandler: PacketHandler, enableLogging: Bool) -> EventLoopFuture<Void> {
+    static func createHandlers(for channel: Channel, packetHandler: PacketHandler, enableLogging: Bool) -> EventLoopFuture<Void> {
         var handlersNames: [(handler: ChannelHandler, name: String)]
         if enableLogging {
             handlersNames = [(handler: DebugInboundEventsHandler(), name: "InboundBytes"),

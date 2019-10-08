@@ -1,3 +1,3 @@
 import DragonflyServer
 
-DragonflyServer.run()
+DragonflyServer.run(enableLogging: false)
