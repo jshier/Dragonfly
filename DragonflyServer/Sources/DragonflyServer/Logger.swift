@@ -6,8 +6,7 @@
 //
 
 enum Logger {
-    static var isEnabled = true
-    
+    static var isEnabled = false
     
     static func log(_ string: @autoclosure () -> String) {
         guard isEnabled else { return }
