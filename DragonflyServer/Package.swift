@@ -11,12 +11,13 @@ let package = Package(
     dependencies: [
          .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
          .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.0.0"),
+         .package(url: "https://github.com/apple/swift-argument-parser", from: "0.0.1"),
          .package(path: "../DragonflyCore")
     ],
     targets: [
         .target(
             name: "dragonfly",
-            dependencies: ["DragonflyServer"]),
+            dependencies: ["DragonflyServer", "ArgumentParser"]),
         .target(
             name: "DragonflyServer",
             dependencies: ["NIO", "NIOFoundationCompat", "NIOExtras", "DragonflyCore"]),
