@@ -2,19 +2,15 @@ import ArgumentParser
 import DragonflyServer
 
 struct Dragonfly: ParsableCommand {
-    @Option(default: "127.0.0.1",
-            help: "Hostname of the server.")
-    var host: String
+    @Option(help: "Hostname of the server.")
+    var host = "127.0.0.1"
     
-    @Option(name: [.customLong("logging"), .customShort("l")],
-            default: false,
-            help: "Whether logging is enabled.")
-    var enableLogging: Bool
+    @Flag(name: [.customLong("logging"), .customShort("l")],
+          help: "Whether logging is enabled.")
+    var enableLogging = false
     
-    @Option(default: 9999,
-            help: "Port on which to run the server.")
-    var port: Int
-    
+    @Option(help: "Port on which to run the server.")
+    var port = 9999
     
     func run() throws {
         DragonflyServer.run(host: host, port: port, enableLogging: enableLogging)

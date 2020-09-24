@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/apple/swift-argument-parser",
         "state": {
           "branch": null,
-          "revision": "f6ac7b8118ff5d1bc0faee7f37bf6f8fd8f95602",
-          "version": "0.0.1"
+          "revision": "92646c0cdbaca076c8d3d0207891785b3379cbff",
+          "version": "0.3.1"
         }
       },
       {
@@ -15,8 +15,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "df9390006bce7da1b6273f804d3acbbfdfcc6154",
-          "version": "2.13.1"
+          "revision": "96db8838be60fcbb993fa738e1120fb7f4b99c43",
+          "version": "2.22.1"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-extras.git",
         "state": {
           "branch": null,
-          "revision": "b4dbfacff47fb8d0f9e0a422d8d37935a9f10570",
-          "version": "1.4.0"
+          "revision": "e5b5d191a80667a14827bfeb0ae4a511f7677942",
+          "version": "1.7.0"
         }
       }
     ]
